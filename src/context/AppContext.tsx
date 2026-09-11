@@ -46,6 +46,7 @@ interface AppContextType {
   loginMerchant: (userData: { id?: string; name: string; email: string; storeName: string }) => void;
   logoutMerchant: () => void;
   openPublicTracking: (code: string) => void;
+  getTrackingUrl: (code: string) => string;
   createSingleShipment: (data: CreateShipmentInput) => { success: boolean; shipment?: Shipment; error?: string };
   createBatchShipments: (items: CreateShipmentInput[]) => { success: boolean; count: number; error?: string };
   updateShipmentStatus: (id: string, status: TrackingStatus) => void;
@@ -323,7 +324,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const tmpl = whatsappTemplates.find(t => t.triggerStatus === status && t.enabled);
     if (!tmpl) return;
 
-    const trackingLink = `${window.location.origin}/r/${shipment.code}`;
+    const trackingLink = getTrackingUrl(shipment.code);
     let msg = tmpl.message
       .replace(/{nome}/g, shipment.customerName.split(' ')[0])
       .replace(/{pedido}/g, shipment.orderNumber)
@@ -410,8 +411,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const getTrackingUrl = (code: string): string => {
+    const custom = widgetSettings.customTrackingDomain?.trim();
+    if (custom) {
+      if (custom.includes('loggi-transportadora.site')) {
+        return `https://www.loggi-transportadora.site/rastreamento?codigo=${encodeURIComponent(code)}`;
+      }
+      if (custom.includes('{code}')) {
+        return custom.replace('{code}', encodeURIComponent(code));
+      }
+      if (custom.endsWith('/')) {
+        return `${custom}${encodeURIComponent(code)}`;
+      }
+      return `${custom}/r/${encodeURIComponent(code)}`;
+    }
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://rastreio-roi.vercel.app';
+    return `${origin}/r/${encodeURIComponent(code)}`;
+  };
+
   const openPublicTracking = (code: string) => {
-    window.open(`/r/${code}`, '_blank');
+    const url = getTrackingUrl(code);
+    window.open(url, '_blank');
   };
 
   return (
@@ -428,6 +448,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       loginMerchant,
       logoutMerchant,
       openPublicTracking,
+      getTrackingUrl,
       createSingleShipment,
       createBatchShipments,
       updateShipmentStatus,

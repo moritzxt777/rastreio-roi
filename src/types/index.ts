@@ -113,6 +113,7 @@ export interface UpsellConfig {
   couponCode: string;
   couponDiscount: string;
   supportWhatsApp: string;
+  customTrackingDomain?: string;
   supportEmail: string;
   supportText: string;
   products: UpsellProduct[];
@@ -140,4 +141,5 @@ export interface WidgetSettings {
   buttonText: string;
   showSupportButton: boolean;
   supportWhatsApp: string;
+  customTrackingDomain?: string;
 }

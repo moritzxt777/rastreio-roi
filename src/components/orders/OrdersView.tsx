@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 export const OrdersView: React.FC<{ onNavigate: (view: string) => void }> = ({ onNavigate }) => {
-  const { shipments, updateShipmentStatus, deleteShipment, openPublicTracking, sendWhatsAppNotification } = useApp();
+  const { shipments, updateShipmentStatus, deleteShipment, openPublicTracking, sendWhatsAppNotification, getTrackingUrl } = useApp();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');

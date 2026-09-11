@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 export const IntegrationsView: React.FC = () => {
-  const { integrations, createSingleShipment, openPublicTracking, updateIntegrations } = useApp();
+  const { integrations, createSingleShipment, openPublicTracking, updateIntegrations, widgetSettings, updateWidgetSettings } = useApp();
 
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [simulatedPlatform, setSimulatedPlatform] = useState('shopify');
@@ -89,7 +89,91 @@ export const IntegrationsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Domain / Server Config Box */}
+            {/* Custom Tracking Portal Configuration */}
+      <div className="rounded-2xl border border-brand-500/30 bg-navy-900/90 p-5 space-y-4 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center font-bold text-xs">
+              URL
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-white">Portal de Rastreamento Oficial dos Clientes</h2>
+              <p className="text-[11px] text-slate-400">Defina o link para onde seus clientes serão direcionados ao clicar no rastreio ou receber no WhatsApp.</p>
+            </div>
+          </div>
+          <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold px-3 py-1 self-start sm:self-auto">
+            Ativo
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              updateWidgetSettings({
+                ...widgetSettings,
+                customTrackingDomain: 'https://www.loggi-transportadora.site/rastreamento'
+              });
+            }}
+            className={`p-3.5 rounded-xl border text-left transition flex items-center justify-between ${
+              widgetSettings.customTrackingDomain?.includes('loggi-transportadora.site')
+                ? 'border-brand-500 bg-brand-500/10 text-white shadow-lg'
+                : 'border-slate-800 bg-navy-950 text-slate-300 hover:border-slate-700'
+            }`}
+          >
+            <div>
+              <div className="font-bold text-xs text-white flex items-center gap-1.5">
+                <span>Portal Loggi Transportadora</span>
+                <span className="text-[9px] bg-brand-500/20 text-brand-300 px-1.5 py-0.5 rounded font-mono">Recomendado</span>
+              </div>
+              <div className="text-[11px] text-slate-400 font-mono mt-0.5">https://www.loggi-transportadora.site/rastreamento</div>
+            </div>
+            {widgetSettings.customTrackingDomain?.includes('loggi-transportadora.site') && (
+              <Check className="w-4 h-4 text-brand-400 shrink-0" />
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              updateWidgetSettings({
+                ...widgetSettings,
+                customTrackingDomain: 'https://rastreio-roi.vercel.app'
+              });
+            }}
+            className={`p-3.5 rounded-xl border text-left transition flex items-center justify-between ${
+              !widgetSettings.customTrackingDomain || widgetSettings.customTrackingDomain.includes('rastreio-roi')
+                ? 'border-brand-500 bg-brand-500/10 text-white shadow-lg'
+                : 'border-slate-800 bg-navy-950 text-slate-300 hover:border-slate-700'
+            }`}
+          >
+            <div>
+              <div className="font-bold text-xs text-white flex items-center gap-1.5">
+                <span>Portal Nativo Rastreio ROI (Com Upsell & WhatsApp)</span>
+              </div>
+              <div className="text-[11px] text-slate-400 font-mono mt-0.5">https://rastreio-roi.vercel.app/r/{"{codigo}"}</div>
+            </div>
+            {(!widgetSettings.customTrackingDomain || widgetSettings.customTrackingDomain.includes('rastreio-roi')) && (
+              <Check className="w-4 h-4 text-brand-400 shrink-0" />
+            )}
+          </button>
+        </div>
+
+        <div className="pt-1">
+          <label className="block text-xs font-semibold text-slate-300 mb-1.5">Ou digite uma URL / Domínio customizado:</label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              value={widgetSettings.customTrackingDomain || ''}
+              onChange={(e) => updateWidgetSettings({ ...widgetSettings, customTrackingDomain: e.target.value })}
+              placeholder="https://www.loggi-transportadora.site/rastreamento"
+              className="flex-1 rounded-xl border border-slate-800 bg-navy-950 px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-slate-600 focus:border-brand-500 focus:outline-none"
+            />
+          </div>
+        </div>
+      </div>
+
+{/* Domain / Server Config Box */}
       <form onSubmit={handleUpdateApiHost} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export const TrackingGeneratorView: React.FC<{ onNavigate: (view: string) => void }> = ({ onNavigate }) => {
-  const { createSingleShipment, createBatchShipments, dailyQuota, openPublicTracking } = useApp();
+  const { createSingleShipment, createBatchShipments, dailyQuota, openPublicTracking, getTrackingUrl } = useApp();
 
   const [tab, setTab] = useState<'single' | 'batch'>('single');
   
@@ -406,20 +406,35 @@ Beatriz Rocha Martins;51998765432;Fone Sem Fio Pro;99.90;Porto Alegre;RS`;
                 </div>
 
                 <div className="space-y-2 pt-2">
-                  <button
-                    onClick={() => handleCopyCode(lastCreated.code)}
-                    className="w-full flex items-center justify-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copied ? 'Código Copiado!' : 'Copiar Código'}</span>
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => handleCopyCode(lastCreated.code)}
+                      className="flex items-center justify-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copied ? 'Código Copiado!' : 'Copiar Código'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const link = getTrackingUrl(lastCreated.code);
+                        navigator.clipboard.writeText(link);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="flex items-center justify-center space-x-1.5 rounded-lg border border-brand-500/40 bg-brand-500/10 py-2 text-xs font-semibold text-brand-300 hover:bg-brand-500/20 transition"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copiar Link</span>
+                    </button>
+                  </div>
 
                   <button
                     onClick={() => openPublicTracking(lastCreated.code)}
-                    className="w-full flex items-center justify-center space-x-1.5 rounded-lg bg-brand-500 py-2 text-xs font-bold text-slate-950 hover:bg-brand-400 transition"
+                    className="w-full flex items-center justify-center space-x-1.5 rounded-lg bg-brand-500 py-2.5 text-xs font-bold text-slate-950 hover:bg-brand-400 transition shadow-lg shadow-brand-500/20"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Abrir Página de Rastreio com Upsell</span>
+                    <span>Abrir Página de Rastreio</span>
                   </button>
                 </div>
               </div>
