@@ -15,6 +15,7 @@ import {
 import { Storage } from '../utils/storage';
 import { generateTrackingCode, generateRealisticTimeline } from '../utils/generators';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { sendWhatsAppTrackingNotification } from '../services/whatsapp.service';
 
 interface CreateShipmentInput {
   customerName: string;
@@ -401,8 +402,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!shipment.whatsappNotified) {
       const updated = { ...shipment, whatsappNotified: true };
       Storage.updateShipment(updated);
-    syncShipmentToSupabase(updated);
+      syncShipmentToSupabase(updated);
       setShipments(Storage.getShipments(currentUser.id));
+    }
+
+    // Disparo real via API do WhatsApp
+    if (shipment.customerPhone) {
+      sendWhatsAppTrackingNotification({
+        phone: shipment.customerPhone,
+        customerName: shipment.customerName,
+        orderNumber: shipment.orderNumber,
+        trackingCode: shipment.code,
+        productName: shipment.productName,
+        templateMessage: tmpl.message,
+        customTrackingUrl: trackingLink,
+      }).catch((err) => {
+        console.warn('[AppContext] Falha no disparo automático do WhatsApp:', err?.message || err);
+      });
     }
   };
 

@@ -10,16 +10,21 @@ import {
   Sparkles, 
   RefreshCw,
   QrCode,
-  ShieldCheck
+  ShieldCheck,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
+import { sendWhatsAppTrackingNotification } from '../../services/whatsapp.service';
 
 export const WhatsAppView: React.FC = () => {
-  const { whatsappTemplates, updateWhatsAppTemplates, whatsappLogs, shipments } = useApp();
+  const { whatsappTemplates, updateWhatsAppTemplates, whatsappLogs, shipments, getTrackingUrl } = useApp();
 
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>(whatsappTemplates);
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate>(whatsappTemplates[0]);
   const [testPhone, setTestPhone] = useState('11999998888');
   const [testSent, setTestSent] = useState(false);
+  const [isSendingTest, setIsSendingTest] = useState(false);
+  const [testError, setTestError] = useState<string | null>(null);
   const [qrConnected, setQrConnected] = useState(true);
 
   const handleToggleTemplate = (id: string) => {
@@ -35,11 +40,6 @@ export const WhatsAppView: React.FC = () => {
     updateWhatsAppTemplates(updated);
   };
 
-  const handleSendTest = () => {
-    setTestSent(true);
-    setTimeout(() => setTestSent(false), 3000);
-  };
-
   // Preview formatting
   const sampleShipment = shipments[0] || {
     customerName: 'Lucas Silveira',
@@ -48,12 +48,40 @@ export const WhatsAppView: React.FC = () => {
     productName: 'Smartwatch Ultra 9'
   };
 
+  const trackingLinkPreview = getTrackingUrl(sampleShipment.code);
+
   const previewText = selectedTemplate.message
     .replace(/{nome}/g, sampleShipment.customerName.split(' ')[0])
     .replace(/{pedido}/g, sampleShipment.orderNumber)
     .replace(/{codigo}/g, sampleShipment.code)
-    .replace(/{link_rastreio}/g, `${window.location.origin}/#tracking=${sampleShipment.code}`)
+    .replace(/{link_rastreio}/g, trackingLinkPreview)
     .replace(/{produto}/g, sampleShipment.productName);
+
+  const handleSendTest = async () => {
+    if (!testPhone.trim() || isSendingTest) return;
+    setIsSendingTest(true);
+    setTestError(null);
+    setTestSent(false);
+
+    try {
+      await sendWhatsAppTrackingNotification({
+        phone: testPhone,
+        customerName: sampleShipment.customerName,
+        orderNumber: sampleShipment.orderNumber,
+        trackingCode: sampleShipment.code,
+        productName: sampleShipment.productName,
+        templateMessage: selectedTemplate.message,
+        customTrackingUrl: trackingLinkPreview,
+      });
+      setTestSent(true);
+      setTimeout(() => setTestSent(false), 4000);
+    } catch (err: any) {
+      setTestError(err?.message || 'Erro ao enviar notificação pelo WhatsApp');
+      setTimeout(() => setTestError(null), 6000);
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -217,15 +245,22 @@ export const WhatsAppView: React.FC = () => {
                 />
                 <button
                   type="button"
+                  disabled={isSendingTest}
                   onClick={handleSendTest}
-                  className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-emerald-400 transition shrink-0"
+                  className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-emerald-400 disabled:opacity-50 transition shrink-0 flex items-center justify-center min-w-[36px]"
                 >
-                  <Send className="w-3.5 h-3.5" />
+                  {isSendingTest ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                 </button>
               </div>
               {testSent && (
                 <p className="text-[10px] text-emerald-400 text-center font-semibold animate-pulse">
                   ✓ Mensagem enviada com sucesso!
+                </p>
+              )}
+              {testError && (
+                <p className="text-[10px] text-rose-400 text-center font-medium bg-rose-500/10 border border-rose-500/20 rounded p-1.5 flex items-center justify-center gap-1">
+                  <AlertCircle className="w-3 h-3 shrink-0" />
+                  <span>{testError}</span>
                 </p>
               )}
             </div>
