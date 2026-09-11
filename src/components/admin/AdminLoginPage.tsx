@@ -16,10 +16,10 @@ export const AdminLoginPage: React.FC = () => {
     setLoading(true);
 
     setTimeout(() => {
-      // Admin verification (accepts Blackroide10 or master password)
+      // Admin verification (accepts strictly Blackroide10)
       if (
-        (email.trim().toLowerCase() === 'admin@rastreioja.com' || email.trim().toLowerCase() === 'admin' || email.trim().toLowerCase() === 'blackroide10') &&
-        (password === 'Blackroide10' || password === 'admin123' || password === 'admin' || password === '123456')
+        (email.trim().toLowerCase() === 'admin@rastreioja.com' || email.trim().toLowerCase() === 'blackroide10') &&
+        password === 'Blackroide10'
       ) {
         localStorage.setItem('rastreio_admin_session', JSON.stringify({
           authenticated: true,
