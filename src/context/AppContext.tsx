@@ -8,6 +8,7 @@ import {
   UpsellConfig, 
   IntegrationConfig, 
   WidgetSettings,
+  CarrierOperationalConfig,
   CarrierType,
   TrackingStatus
 } from '../types';
@@ -41,6 +42,7 @@ interface AppContextType {
   upsellConfig: UpsellConfig;
   integrations: IntegrationConfig[];
   widgetSettings: WidgetSettings;
+  carrierConfig: CarrierOperationalConfig;
   
   // Actions
   loginMerchant: (userData: { id?: string; name: string; email: string; storeName: string }) => void;
@@ -56,6 +58,7 @@ interface AppContextType {
   sendWhatsAppNotification: (shipment: Shipment, status: TrackingStatus) => void;
   updateIntegrations: (integrations: IntegrationConfig[]) => void;
   updateWidgetSettings: (settings: WidgetSettings) => void;
+  updateCarrierConfig: (config: CarrierOperationalConfig) => void;
   recordUpsellClick: (shipmentId: string) => void;
   recordUpsellConversion: (shipmentId: string) => void;
   
@@ -76,6 +79,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [upsellConfig, setUpsellConfig] = useState<UpsellConfig>(() => Storage.getUpsellConfig());
   const [integrations, setIntegrations] = useState<IntegrationConfig[]>(() => Storage.getIntegrations());
   const [widgetSettings, setWidgetSettings] = useState<WidgetSettings>(() => Storage.getWidgetSettings());
+  const [carrierConfig, setCarrierConfig] = useState<CarrierOperationalConfig>(() => Storage.getCarrierConfig());
 
   // Listen to Supabase Auth state or local session
   useEffect(() => {
@@ -369,6 +373,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIntegrations(newList);
   };
 
+    const updateCarrierConfig = (config: CarrierOperationalConfig) => {
+    Storage.saveCarrierConfig(config);
+    setCarrierConfig(config);
+  };
+
   const updateWidgetSettings = (settings: WidgetSettings) => {
     Storage.saveWidgetSettings(settings);
     setWidgetSettings(settings);
@@ -458,6 +467,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sendWhatsAppNotification,
       updateIntegrations,
       updateWidgetSettings,
+      carrierConfig,
+      updateCarrierConfig,
       recordUpsellClick,
       recordUpsellConversion,
       adminSetUserLimit,

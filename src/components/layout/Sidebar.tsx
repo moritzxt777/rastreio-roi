@@ -24,6 +24,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
     { id: 'dashboard', label: 'Dashboard & ROI', icon: LayoutDashboard },
     { id: 'generator', label: 'Gerador de Rastreios', icon: PackagePlus, badge: `${dailyQuota.used}/${dailyQuota.limit}` },
     { id: 'orders', label: 'Pedidos & Envios', icon: Truck, count: shipments.length },
+    { id: 'carriers', label: 'Transportadoras', icon: Truck },
     { id: 'upsell', label: 'Página de Rastreio (ROI)', icon: TrendingUp, highlight: true },
     { id: 'whatsapp', label: 'WhatsApp & Alertas', icon: MessageSquare },
     { id: 'integrations', label: 'Integrações & Webhooks', icon: Webhook },

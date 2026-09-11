@@ -6,7 +6,8 @@ import {
   WhatsAppLog, 
   UpsellConfig, 
   IntegrationConfig, 
-  WidgetSettings, 
+  WidgetSettings,
+  CarrierOperationalConfig, 
   TrackingStatus 
 } from '../types';
 import { generateTrackingCode, generateRealisticTimeline } from './generators';
@@ -159,6 +160,18 @@ const DEFAULT_INTEGRATIONS: IntegrationConfig[] = [
     totalOrdersSynced: 0
   }
 ];
+
+const DEFAULT_CARRIER_CONFIG: CarrierOperationalConfig = {
+  activeCarrier: 'loggi',
+  originCity: 'Cajamar',
+  originState: 'SP',
+  deliveryDays: 15,
+  isExtendedDelivery: true,
+  showEstimatedDate: true,
+  processingTime: '4h',
+  deliveryAttempts: '1',
+  finalOutcome: 'delivered'
+};
 
 const DEFAULT_WIDGET: WidgetSettings = {
   primaryColor: '#3b82f6',
@@ -444,5 +457,20 @@ export const Storage = {
 
   saveWidgetSettings(settings: WidgetSettings): void {
     localStorage.setItem(STORAGE_KEYS.WIDGET_SETTINGS, JSON.stringify(settings));
+  },
+
+  // Carrier Operational Config
+  getCarrierConfig(): CarrierOperationalConfig {
+    const data = localStorage.getItem('rastreio_carrier_config');
+    if (!data) return DEFAULT_CARRIER_CONFIG;
+    try {
+      return { ...DEFAULT_CARRIER_CONFIG, ...JSON.parse(data) };
+    } catch {
+      return DEFAULT_CARRIER_CONFIG;
+    }
+  },
+
+  saveCarrierConfig(config: CarrierOperationalConfig): void {
+    localStorage.setItem('rastreio_carrier_config', JSON.stringify(config));
   }
 };

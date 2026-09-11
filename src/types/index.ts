@@ -143,3 +143,15 @@ export interface WidgetSettings {
   supportWhatsApp: string;
   customTrackingDomain?: string;
 }
+
+export interface CarrierOperationalConfig {
+  activeCarrier: 'loggi' | 'jadlog';
+  originCity: string;
+  originState: string;
+  deliveryDays: number;
+  isExtendedDelivery: boolean;
+  showEstimatedDate: boolean;
+  processingTime: '2h' | '4h' | '8h' | '12h';
+  deliveryAttempts: '0' | '1' | '2';
+  finalOutcome: 'delivered' | 'returned' | 'lost';
+}

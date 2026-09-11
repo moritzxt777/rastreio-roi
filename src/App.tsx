@@ -12,6 +12,7 @@ import { WhatsAppView } from './components/whatsapp/WhatsAppView';
 import { IntegrationsView } from './components/integrations/IntegrationsView';
 import { ShippingToolsView } from './components/shipping/ShippingToolsView';
 import { WidgetView } from './components/widget/WidgetView';
+import { CarriersView } from './components/carriers/CarriersView';
 import { AdminLoginPage } from './components/admin/AdminLoginPage';
 import { AdminMasterView } from './components/admin/AdminMasterView';
 import { RequireMerchant, RequireAdmin } from './components/auth/AuthGuard';
@@ -97,6 +98,16 @@ export const App: React.FC = () => {
       <Route path="/shipping_tools" element={
         <RequireMerchant>
           <MerchantLayout><ShippingToolsView /></MerchantLayout>
+        </RequireMerchant>
+      } />
+            <Route path="/carriers" element={
+        <RequireMerchant>
+          <MerchantLayout><CarriersView /></MerchantLayout>
+        </RequireMerchant>
+      } />
+      <Route path="/transportadoras" element={
+        <RequireMerchant>
+          <MerchantLayout><CarriersView /></MerchantLayout>
         </RequireMerchant>
       } />
       <Route path="/widget" element={
