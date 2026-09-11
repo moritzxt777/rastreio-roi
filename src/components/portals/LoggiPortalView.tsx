@@ -30,6 +30,14 @@ export const LoggiPortalView: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
+  useEffect(() => {
+    const link = (document.querySelector("link[rel*='icon']") as HTMLLinkElement) || document.createElement('link');
+    link.type = 'image/x-icon';
+    link.rel = 'shortcut icon';
+    link.href = '/loggi-favicon.ico';
+    document.getElementsByTagName('head')[0].appendChild(link);
+  }, []);
+
   const cleanCode = (code || '').trim().toUpperCase();
 
   useEffect(() => {
@@ -88,7 +96,8 @@ export const LoggiPortalView: React.FC = () => {
       <Helmet>
         <title>{shipment ? `Rastreamento Loggi - ${shipment.code}` : 'Loggi | Rastreamento de Encomendas'}</title>
         <meta name="description" content="Acompanhe a rota e entrega do seu pacote em tempo real com a Loggi." />
-        <link rel="icon" href="https://www.loggi.com/favicon.ico" />
+        <link rel="icon" type="image/x-icon" href="/loggi-favicon.ico" />
+        <link rel="shortcut icon" type="image/x-icon" href="/loggi-favicon.ico" />
       </Helmet>
 
       {/* LOGGI HEADER */}

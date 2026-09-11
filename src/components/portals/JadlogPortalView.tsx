@@ -27,6 +27,14 @@ export const JadlogPortalView: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
+  useEffect(() => {
+    const link = (document.querySelector("link[rel*='icon']") as HTMLLinkElement) || document.createElement('link');
+    link.type = 'image/png';
+    link.rel = 'shortcut icon';
+    link.href = '/jadlog-favicon.png';
+    document.getElementsByTagName('head')[0].appendChild(link);
+  }, []);
+
   const cleanCode = (code || '').trim().toUpperCase();
 
   useEffect(() => {
@@ -85,7 +93,8 @@ export const JadlogPortalView: React.FC = () => {
       <Helmet>
         <title>{shipment ? `Rastreamento Jadlog - ${shipment.code}` : 'Jadlog - Sua encomenda no melhor caminho'}</title>
         <meta name="description" content="Acompanhe o rastreamento da sua encomenda em tempo real na Jadlog." />
-        <link rel="icon" href="https://www.jadlog.com.br/jadlog/img/favicon.png" />
+        <link rel="icon" type="image/png" href="/jadlog-favicon.png" />
+        <link rel="shortcut icon" type="image/png" href="/jadlog-favicon.png" />
       </Helmet>
 
       {/* TOP BAR / JADLOG HEADER */}

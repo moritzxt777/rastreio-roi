@@ -4,6 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      (function() {
+        var h = window.location.hostname.toLowerCase();
+        var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+        link.type = 'image/x-icon';
+        link.rel = 'shortcut icon';
+        if (h.includes('loggi')) {
+          link.href = '/loggi-favicon.ico';
+          document.title = 'Loggi | Melhores fretes, envios rápidos, entregas em todo Brasil';
+        } else if (h.includes('jadlog') || h.includes('jadxlog')) {
+          link.href = '/jadlog-favicon.png';
+          link.type = 'image/png';
+          document.title = 'Jadlog - Sua encomenda no melhor caminho.';
+        } else {
+          link.href = '/favicon.svg';
+        }
+        document.getElementsByTagName('head')[0].appendChild(link);
+      })();
+    </script>
     
     <title>Rastreio ROI | Sistema de Rastreio & Recuperação de Vendas</title>
     <meta name="description" content="Plataforma líder em rastreamento de pedidos, notificações automáticas de WhatsApp e páginas de rastreio com otimizador de ROI e upsell para e-commerce." />
