@@ -9,7 +9,6 @@ import {
   Webhook, 
   Printer, 
   Code2, 
-  ShieldCheck,
   TrendingUp
 } from 'lucide-react';
 
@@ -19,7 +18,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
-  const { currentUser, shipments, dailyQuota } = useApp();
+  const { shipments, dailyQuota } = useApp();
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard & ROI', icon: LayoutDashboard },
@@ -35,7 +34,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
   return (
     <aside className="w-64 border-r border-slate-800 bg-slate-950 flex flex-col justify-between p-4 shrink-0 min-h-[calc(100vh-57px)]">
       <div className="space-y-6">
-        {/* Navigation Section */}
         <div>
           <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Menu Principal</p>
           <nav className="space-y-1">
@@ -76,29 +74,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
               );
             })}
           </nav>
-        </div>
-
-        {/* Admin Section */}
-        <div>
-          <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-amber-500/80 mb-2 flex items-center gap-1">
-            <ShieldCheck className="w-3 h-3 text-amber-400" /> Administração
-          </p>
-          <button
-            onClick={() => onNavigate('admin')}
-            className={`w-full flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-medium transition-all ${
-              activeView === 'admin'
-                ? 'bg-amber-500/10 text-amber-300 font-semibold border border-amber-500/30'
-                : 'text-slate-400 hover:bg-slate-900 hover:text-amber-300'
-            }`}
-          >
-            <div className="flex items-center space-x-2.5">
-              <ShieldCheck className="w-4 h-4 text-amber-400" />
-              <span>Painel Admin & Cotas</span>
-            </div>
-            <span className="rounded bg-amber-500/20 text-amber-300 px-1.5 py-0.5 text-[9px] font-bold">
-              MASTER
-            </span>
-          </button>
         </div>
       </div>
 

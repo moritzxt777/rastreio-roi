@@ -1,6 +1,5 @@
 import React from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { useApp } from './context/AppContext';
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
 import { DashboardView } from './components/dashboard/DashboardView';
@@ -12,40 +11,11 @@ import { WhatsAppView } from './components/whatsapp/WhatsAppView';
 import { IntegrationsView } from './components/integrations/IntegrationsView';
 import { ShippingToolsView } from './components/shipping/ShippingToolsView';
 import { WidgetView } from './components/widget/WidgetView';
+import { AdminLoginPage } from './components/admin/AdminLoginPage';
 import { AdminMasterView } from './components/admin/AdminMasterView';
-import { ShieldAlert, ArrowLeft } from 'lucide-react';
 
-// Protected Admin Guard
-const AdminGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { currentUser } = useApp();
-  const navigate = useNavigate();
-
-  if (currentUser.role !== 'admin') {
-    return (
-      <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-8 text-center space-y-4 max-w-md mx-auto my-12">
-        <div className="w-12 h-12 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
-          <ShieldAlert className="w-6 h-6" />
-        </div>
-        <h2 className="text-lg font-bold text-white">Acesso Restrito ao Administrador</h2>
-        <p className="text-xs text-slate-400 leading-relaxed">
-          Sua conta atual ({currentUser.email}) possui perfil de <strong>Lojista</strong> e não tem permissão para acessar o Painel Master.
-        </p>
-        <button
-          onClick={() => navigate('/')}
-          className="inline-flex items-center space-x-1.5 rounded-xl bg-slate-800 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-700 transition"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Voltar ao Dashboard</span>
-        </button>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-};
-
-// Dashboard Layout wrapper
-const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Standard Merchant Layout
+const MerchantLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const currentPath = location.pathname.replace('/', '') || 'dashboard';
@@ -70,31 +40,28 @@ export const App: React.FC = () => {
 
   return (
     <Routes>
-      {/* 1. Public Tracking Routes (/r/:code, /rastreio/:code, /tracking/:code) */}
+      {/* 1. Public Tracking Routes */}
       <Route path="/r/:code" element={<PublicTrackingView />} />
       <Route path="/rastreio/:code" element={<PublicTrackingView />} />
       <Route path="/tracking/:code" element={<PublicTrackingView />} />
 
-      {/* 2. Authenticated Dashboard Routes */}
-      <Route path="/" element={<DashboardLayout><DashboardView onNavigate={(p) => navigate(p === 'dashboard' ? '/' : `/${p}`)} /></DashboardLayout>} />
-      <Route path="/generator" element={<DashboardLayout><TrackingGeneratorView onNavigate={(p) => navigate(p === 'dashboard' ? '/' : `/${p}`)} /></DashboardLayout>} />
-      <Route path="/orders" element={<DashboardLayout><OrdersView onNavigate={(p) => navigate(p === 'dashboard' ? '/' : `/${p}`)} /></DashboardLayout>} />
-      <Route path="/upsell" element={<DashboardLayout><UpsellSettingsView onNavigate={(p) => navigate(p === 'dashboard' ? '/' : `/${p}`)} /></DashboardLayout>} />
-      <Route path="/whatsapp" element={<DashboardLayout><WhatsAppView /></DashboardLayout>} />
-      <Route path="/integrations" element={<DashboardLayout><IntegrationsView /></DashboardLayout>} />
-      <Route path="/shipping_tools" element={<DashboardLayout><ShippingToolsView /></DashboardLayout>} />
-      <Route path="/widget" element={<DashboardLayout><WidgetView /></DashboardLayout>} />
+      {/* 2. DEDICATED SEPARATE ADMIN ROUTES (LOGIN + MASTER PANEL) */}
+      <Route path="/admin-login" element={<AdminLoginPage />} />
+      <Route path="/admin/login" element={<AdminLoginPage />} />
+      <Route path="/admin-master" element={<AdminMasterView />} />
+      <Route path="/admin" element={<Navigate to="/admin-login" replace />} />
 
-      {/* 3. Protected Master Admin Route */}
-      <Route path="/admin" element={
-        <DashboardLayout>
-          <AdminGuard>
-            <AdminMasterView />
-          </AdminGuard>
-        </DashboardLayout>
-      } />
+      {/* 3. Regular Merchant Dashboard Routes */}
+      <Route path="/" element={<MerchantLayout><DashboardView onNavigate={(p) => navigate(p === 'dashboard' ? '/' : `/${p}`)} /></MerchantLayout>} />
+      <Route path="/generator" element={<MerchantLayout><TrackingGeneratorView onNavigate={(p) => navigate(p === 'dashboard' ? '/' : `/${p}`)} /></MerchantLayout>} />
+      <Route path="/orders" element={<MerchantLayout><OrdersView onNavigate={(p) => navigate(p === 'dashboard' ? '/' : `/${p}`)} /></MerchantLayout>} />
+      <Route path="/upsell" element={<MerchantLayout><UpsellSettingsView onNavigate={(p) => navigate(p === 'dashboard' ? '/' : `/${p}`)} /></MerchantLayout>} />
+      <Route path="/whatsapp" element={<MerchantLayout><WhatsAppView /></MerchantLayout>} />
+      <Route path="/integrations" element={<MerchantLayout><IntegrationsView /></MerchantLayout>} />
+      <Route path="/shipping_tools" element={<MerchantLayout><ShippingToolsView /></MerchantLayout>} />
+      <Route path="/widget" element={<MerchantLayout><WidgetView /></MerchantLayout>} />
 
-      {/* Fallback */}
+      {/* 4. Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
