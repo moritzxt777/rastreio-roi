@@ -1,17 +1,26 @@
-import { Shipment, User, UserDailyQuota, WhatsAppTemplate, WhatsAppLog, UpsellConfig, IntegrationConfig, WidgetSettings, TrackingStatus } from '../types';
+import { 
+  Shipment, 
+  User, 
+  UserDailyQuota, 
+  WhatsAppTemplate, 
+  WhatsAppLog, 
+  UpsellConfig, 
+  IntegrationConfig, 
+  WidgetSettings, 
+  TrackingStatus 
+} from '../types';
 import { generateTrackingCode, generateRealisticTimeline } from './generators';
 
 const STORAGE_KEYS = {
-  USERS: 'rastreio_users_v2',
-  CURRENT_USER: 'rastreio_current_user_v2',
-  QUOTAS: 'rastreio_daily_quotas_v2',
-  SHIPMENTS: 'rastreio_shipments_v2',
-  WHATSAPP_INSTANCES: 'rastreio_whatsapp_instances_v2',
-  WHATSAPP_TEMPLATES: 'rastreio_whatsapp_templates_v2',
-  WHATSAPP_LOGS: 'rastreio_whatsapp_logs_v2',
-  UPSELL_CONFIG: 'rastreio_upsell_config_v2',
-  INTEGRATIONS: 'rastreio_integrations_v2',
-  WIDGET_SETTINGS: 'rastreio_widget_settings_v2',
+  USERS: 'rastreio_users_v3',
+  CURRENT_USER: 'rastreio_current_user_v3',
+  QUOTAS: 'rastreio_daily_quotas_v3',
+  SHIPMENTS: 'rastreio_shipments_v3',
+  WHATSAPP_TEMPLATES: 'rastreio_whatsapp_templates_v3',
+  WHATSAPP_LOGS: 'rastreio_whatsapp_logs_v3',
+  UPSELL_CONFIG: 'rastreio_upsell_config_v3',
+  INTEGRATIONS: 'rastreio_integrations_v3',
+  WIDGET_SETTINGS: 'rastreio_widget_settings_v3',
 };
 
 export function getTodayDateString(): string {
@@ -19,7 +28,6 @@ export function getTodayDateString(): string {
   return d.toISOString().split('T')[0];
 }
 
-// Initial Mock Seed Data
 const DEFAULT_USERS: User[] = [
   {
     id: 'usr_admin',
@@ -30,26 +38,6 @@ const DEFAULT_USERS: User[] = [
     dailyLimit: 1000,
     isUnlimited: true,
     createdAt: new Date().toISOString()
-  },
-  {
-    id: 'usr_merchant_1',
-    name: 'Yude Store Oficial',
-    email: 'contato@yudestore.com.br',
-    storeName: 'Yude Drop Store',
-    role: 'merchant',
-    dailyLimit: 100, // standard default 100 per day!
-    isUnlimited: false,
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: 'usr_merchant_2',
-    name: 'Top Imports Brasil',
-    email: 'comercial@topimports.com',
-    storeName: 'Top Imports',
-    role: 'merchant',
-    dailyLimit: 250, // modified by admin
-    isUnlimited: false,
-    createdAt: new Date(Date.now() - 86400000 * 5).toISOString()
   }
 ];
 
@@ -132,8 +120,7 @@ const DEFAULT_INTEGRATIONS: IntegrationConfig[] = [
     enabled: true,
     webhookSecret: 'shpat_98a7sd8f7a6sd5f46a5s',
     webhookUrl: 'https://api.seudominio.com.br/v1/webhooks/shopify',
-    totalOrdersSynced: 1284,
-    lastSyncAt: new Date(Date.now() - 1000 * 60 * 12).toISOString()
+    totalOrdersSynced: 0
   },
   {
     id: 'int-yampi',
@@ -142,8 +129,7 @@ const DEFAULT_INTEGRATIONS: IntegrationConfig[] = [
     enabled: true,
     webhookSecret: 'ymp_sec_876123456789',
     webhookUrl: 'https://api.seudominio.com.br/v1/webhooks/yampi',
-    totalOrdersSynced: 593,
-    lastSyncAt: new Date(Date.now() - 1000 * 60 * 45).toISOString()
+    totalOrdersSynced: 0
   },
   {
     id: 'int-cartpanda',
@@ -161,8 +147,7 @@ const DEFAULT_INTEGRATIONS: IntegrationConfig[] = [
     enabled: true,
     webhookSecret: 'nvm_tok_654987321',
     webhookUrl: 'https://api.seudominio.com.br/v1/webhooks/nuvemshop',
-    totalOrdersSynced: 340,
-    lastSyncAt: new Date(Date.now() - 1000 * 60 * 180).toISOString()
+    totalOrdersSynced: 0
   },
   {
     id: 'int-kiwify',
@@ -171,16 +156,15 @@ const DEFAULT_INTEGRATIONS: IntegrationConfig[] = [
     enabled: true,
     webhookSecret: 'kwf_wh_7819234871',
     webhookUrl: 'https://api.seudominio.com.br/v1/webhooks/kiwify',
-    totalOrdersSynced: 87,
-    lastSyncAt: new Date(Date.now() - 1000 * 60 * 240).toISOString()
+    totalOrdersSynced: 0
   }
 ];
 
 const DEFAULT_WIDGET: WidgetSettings = {
-  primaryColor: '#10b981',
+  primaryColor: '#3b82f6',
   textColor: '#ffffff',
-  backgroundColor: '#0f172a',
-  borderRadius: 12,
+  backgroundColor: '#040711',
+  borderRadius: 16,
   customTitle: 'Rastreie seu Pedido',
   customSubtitle: 'Digite o código de rastreio ou número do pedido para acompanhar a entrega.',
   placeholderText: 'Ex: NL123456789BR ou #1042',
@@ -189,53 +173,6 @@ const DEFAULT_WIDGET: WidgetSettings = {
   supportWhatsApp: '5511999998888'
 };
 
-// Seed Mock Shipments
-function generateSeedShipments(): Shipment[] {
-  const seedNames = [
-    { name: 'Lucas Gabriel Silveira', city: 'São Paulo', state: 'SP', prod: 'Smartwatch Ultra Series 9', val: 199.90 },
-    { name: 'Fernanda Caroline Costa', city: 'Belo Horizonte', state: 'MG', prod: 'Kit 3 Camisetas Premium Dry', val: 147.00 },
-    { name: 'Rodrigo Medeiros Souza', city: 'Curitiba', state: 'PR', prod: 'Fone Bluetooth Pro TWS', val: 129.50 },
-    { name: 'Mariana Lima Rocha', city: 'Rio de Janeiro', state: 'RJ', prod: 'Suporte Articulado Ergonômico', val: 89.90 },
-    { name: 'Thiago Henrique Oliveira', city: 'Campinas', state: 'SP', prod: 'Carregador por Indução 15W', val: 79.90 },
-    { name: 'Camila Beatriz Ferreira', city: 'Porto Alegre', state: 'RS', prod: 'Mini Projetor Portátil Full HD', val: 389.00 },
-    { name: 'Gabriel Santana Castro', city: 'Salvador', state: 'BA', prod: 'Mochila Antifurto Impermeável', val: 159.00 },
-  ];
-
-  return seedNames.map((item, idx) => {
-    const carrier = idx % 2 === 0 ? 'correios' : idx % 3 === 0 ? 'loggi' : 'jadlog';
-    const code = generateTrackingCode(carrier);
-    const statuses: TrackingStatus[] = ['in_transit', 'out_for_delivery', 'posted', 'delivered', 'in_transit', 'posted', 'delivered'];
-    const status = statuses[idx % statuses.length];
-    
-    return {
-      id: `ship-${idx + 1}`,
-      code,
-      carrier,
-      customerName: item.name,
-      customerPhone: `1198765432${idx}`,
-      customerEmail: `${item.name.toLowerCase().split(' ')[0]}@gmail.com`,
-      orderNumber: `${10800 + idx}`,
-      orderValue: item.val,
-      productName: item.prod,
-      originCity: 'Cajamar',
-      originState: 'SP',
-      destinationCity: item.city,
-      destinationState: item.state,
-      destinationZip: '01001-000',
-      status,
-      events: generateRealisticTimeline(carrier, 'Cajamar', 'SP', item.city, item.state, status),
-      estimatedDeliveryDate: new Date(Date.now() + 86400000 * (4 - (idx % 3))).toISOString().split('T')[0],
-      createdAt: new Date(Date.now() - 86400000 * (idx + 1)).toISOString(),
-      updatedAt: new Date().toISOString(),
-      whatsappNotified: idx % 2 === 0,
-      emailNotified: true,
-      upsellClicks: Math.floor(Math.random() * 8) + 1,
-      upsellConversions: idx % 3 === 0 ? 1 : 0
-    };
-  });
-}
-
-// STORAGE GETTERS / SETTERS
 export const Storage = {
   getUsers(): User[] {
     const raw = localStorage.getItem(STORAGE_KEYS.USERS);
@@ -249,16 +186,41 @@ export const Storage = {
   getCurrentUser(): User {
     const raw = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
     if (!raw) {
-      const users = this.getUsers();
-      const defaultUser = users[1]; // merchant user by default
-      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(defaultUser));
-      return defaultUser;
+      // Check merchant session if available
+      const sess = localStorage.getItem('rastreio_merchant_session');
+      if (sess) {
+        try {
+          const parsed = JSON.parse(sess);
+          const u: User = {
+            id: parsed.id || `usr_${Date.now()}`,
+            name: parsed.name || 'Lojista Oficial',
+            email: parsed.email || 'lojista@exemplo.com',
+            storeName: parsed.storeName || 'Minha Loja',
+            role: 'merchant',
+            dailyLimit: 100,
+            isUnlimited: false,
+            createdAt: new Date().toISOString()
+          };
+          this.setCurrentUser(u);
+          return u;
+        } catch {}
+      }
+      return DEFAULT_USERS[0];
     }
     return JSON.parse(raw);
   },
 
   setCurrentUser(user: User): void {
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+    // Also add to users list if not exists
+    const users = this.getUsers();
+    const existingIndex = users.findIndex(u => u.id === user.id || u.email.toLowerCase() === user.email.toLowerCase());
+    if (existingIndex !== -1) {
+      users[existingIndex] = { ...users[existingIndex], ...user };
+    } else {
+      users.push(user);
+    }
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
   },
 
   updateUser(updatedUser: User): void {
@@ -270,12 +232,12 @@ export const Storage = {
       
       const current = this.getCurrentUser();
       if (current.id === updatedUser.id) {
-        this.setCurrentUser(updatedUser);
+        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(updatedUser));
       }
     }
   },
 
-  // Daily Quota logic (100 codes per day default, reset at midnight, admin editable)
+  // Daily Quota (100 codes per day default, reset at midnight, admin editable)
   getDailyQuota(userId: string): UserDailyQuota {
     const today = getTodayDateString();
     const raw = localStorage.getItem(STORAGE_KEYS.QUOTAS);
@@ -288,18 +250,17 @@ export const Storage = {
       const newQuota: UserDailyQuota = {
         userId,
         date: today,
-        used: 14, // seed initial usage for realistic demo
+        used: 0, // Clean 0 usage for new users
         limit: user.dailyLimit || 100,
-        isUnlimited: !!user.isUnlimited
+        isUnlimited: Boolean(user.isUnlimited)
       };
       quotas[key] = newQuota;
       localStorage.setItem(STORAGE_KEYS.QUOTAS, JSON.stringify(quotas));
       return newQuota;
     }
     
-    // Sync limit with user setting if changed by admin
     quotas[key].limit = user.dailyLimit || 100;
-    quotas[key].isUnlimited = !!user.isUnlimited;
+    quotas[key].isUnlimited = Boolean(user.isUnlimited);
     return quotas[key];
   },
 
@@ -315,7 +276,7 @@ export const Storage = {
       return {
         success: false,
         quota: currentQuota,
-        reason: `Limite diário atingido (${currentQuota.used}/${currentQuota.limit}). A cota zera automaticamente à meia-noite ou solicite aumento ao administrador.`
+        reason: `Limite diário atingido (${currentQuota.used}/${currentQuota.limit}). A cota zera à meia-noite.`
       };
     }
 
@@ -339,7 +300,7 @@ export const Storage = {
       date: today,
       used: 0,
       limit: user.dailyLimit || 100,
-      isUnlimited: !!user.isUnlimited
+      isUnlimited: Boolean(user.isUnlimited)
     };
     
     quotas[key] = resetQuota;
@@ -355,7 +316,6 @@ export const Storage = {
       user.isUnlimited = isUnlimited;
       this.updateUser(user);
 
-      // Also update today's quota object
       const today = getTodayDateString();
       const raw = localStorage.getItem(STORAGE_KEYS.QUOTAS);
       const quotas: Record<string, UserDailyQuota> = raw ? JSON.parse(raw) : {};
@@ -368,47 +328,54 @@ export const Storage = {
     }
   },
 
-  // Shipments
-  getShipments(): Shipment[] {
+  // Shipments (Isolated per user)
+  getShipments(userId?: string): Shipment[] {
     const raw = localStorage.getItem(STORAGE_KEYS.SHIPMENTS);
-    if (!raw) {
-      const initial = generateSeedShipments();
-      localStorage.setItem(STORAGE_KEYS.SHIPMENTS, JSON.stringify(initial));
-      return initial;
+    if (!raw) return [];
+    const list: (Shipment & { userId?: string })[] = JSON.parse(raw);
+    if (userId) {
+      return list.filter(s => s.userId === userId || !s.userId);
     }
-    return JSON.parse(raw);
+    return list;
   },
 
-  addShipment(shipment: Shipment): void {
-    const list = this.getShipments();
-    list.unshift(shipment);
+  addShipment(shipment: Shipment, userId?: string): void {
+    const raw = localStorage.getItem(STORAGE_KEYS.SHIPMENTS);
+    const list: any[] = raw ? JSON.parse(raw) : [];
+    list.unshift({ ...shipment, userId: userId || 'default' });
     localStorage.setItem(STORAGE_KEYS.SHIPMENTS, JSON.stringify(list));
   },
 
-  addBatchShipments(newShipments: Shipment[]): void {
-    const list = this.getShipments();
-    const updated = [...newShipments, ...list];
-    localStorage.setItem(STORAGE_KEYS.SHIPMENTS, JSON.stringify(updated));
+  addBatchShipments(newShipments: Shipment[], userId?: string): void {
+    const raw = localStorage.getItem(STORAGE_KEYS.SHIPMENTS);
+    const list: any[] = raw ? JSON.parse(raw) : [];
+    const tagged = newShipments.map(s => ({ ...s, userId: userId || 'default' }));
+    localStorage.setItem(STORAGE_KEYS.SHIPMENTS, JSON.stringify([...tagged, ...list]));
   },
 
   updateShipment(updated: Shipment): void {
-    const list = this.getShipments();
-    const index = list.findIndex(s => s.id === updated.id);
+    const raw = localStorage.getItem(STORAGE_KEYS.SHIPMENTS);
+    const list: any[] = raw ? JSON.parse(raw) : [];
+    const index = list.findIndex((s: any) => s.id === updated.id);
     if (index !== -1) {
-      list[index] = updated;
+      list[index] = { ...list[index], ...updated };
       localStorage.setItem(STORAGE_KEYS.SHIPMENTS, JSON.stringify(list));
     }
   },
 
   deleteShipment(id: string): void {
-    const list = this.getShipments().filter(s => s.id !== id);
-    localStorage.setItem(STORAGE_KEYS.SHIPMENTS, JSON.stringify(list));
+    const raw = localStorage.getItem(STORAGE_KEYS.SHIPMENTS);
+    const list: any[] = raw ? JSON.parse(raw) : [];
+    const filtered = list.filter((s: any) => s.id !== id);
+    localStorage.setItem(STORAGE_KEYS.SHIPMENTS, JSON.stringify(filtered));
   },
 
   getShipmentByCode(code: string): Shipment | undefined {
-    const list = this.getShipments();
-    const cleanCode = code.trim().toUpperCase();
-    return list.find(s => s.code.toUpperCase() === cleanCode || s.orderNumber === cleanCode);
+    const raw = localStorage.getItem(STORAGE_KEYS.SHIPMENTS);
+    if (!raw) return undefined;
+    const list: Shipment[] = JSON.parse(raw);
+    const clean = code.trim().toUpperCase();
+    return list.find(s => s.code.toUpperCase() === clean || s.orderNumber.toUpperCase() === clean);
   },
 
   // Upsell Config
@@ -441,34 +408,7 @@ export const Storage = {
 
   getWhatsAppLogs(): WhatsAppLog[] {
     const raw = localStorage.getItem(STORAGE_KEYS.WHATSAPP_LOGS);
-    if (!raw) {
-      const seedLogs: WhatsAppLog[] = [
-        {
-          id: 'log-1',
-          shipmentId: 'ship-1',
-          customerName: 'Lucas Gabriel Silveira',
-          customerPhone: '11987654320',
-          trackingCode: 'NL192837465BR',
-          status: 'sent',
-          triggerStatus: 'posted',
-          message: 'Olá Lucas! 👋 Seu pedido #10800 acabou de ser postado com sucesso.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 30).toLocaleTimeString('pt-BR')
-        },
-        {
-          id: 'log-2',
-          shipmentId: 'ship-2',
-          customerName: 'Fernanda Caroline Costa',
-          customerPhone: '11987654321',
-          trackingCode: 'LG9928172635BR',
-          status: 'sent',
-          triggerStatus: 'out_for_delivery',
-          message: 'Atenção Fernanda! 🛵 O seu pedido #10801 SAIU PARA ENTREGA hoje!',
-          timestamp: new Date(Date.now() - 1000 * 60 * 95).toLocaleTimeString('pt-BR')
-        }
-      ];
-      localStorage.setItem(STORAGE_KEYS.WHATSAPP_LOGS, JSON.stringify(seedLogs));
-      return seedLogs;
-    }
+    if (!raw) return [];
     return JSON.parse(raw);
   },
 

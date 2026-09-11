@@ -26,7 +26,7 @@ import {
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { shipments } = useApp();
+  const { shipments, loginMerchant } = useApp();
 
   // Auth modal state
   const [authMode, setAuthMode] = useState<'login' | 'register' | null>(null);
@@ -130,13 +130,19 @@ export const LandingPage: React.FC = () => {
         }
       }
 
-      // Local Session
+      // Save Real Merchant User
+      const realUserData = {
+        name: name.trim() || email.split('@')[0] || 'Lojista Oficial',
+        email: email.trim(),
+        storeName: storeName.trim() || 'Minha Loja'
+      };
+
       localStorage.setItem('rastreio_merchant_session', JSON.stringify({
         authenticated: true,
-        email: email || 'lojista@exemplo.com',
-        name: name || 'Lojista Oficial',
-        storeName: storeName || 'Minha Loja Drop'
+        ...realUserData
       }));
+
+      loginMerchant(realUserData);
 
       setLoading(false);
       setAuthMode(null);

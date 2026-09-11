@@ -11,8 +11,9 @@ import {
   CarrierType,
   TrackingStatus
 } from '../types';
-import { Storage, getTodayDateString } from '../utils/storage';
+import { Storage } from '../utils/storage';
 import { generateTrackingCode, generateRealisticTimeline } from '../utils/generators';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 interface CreateShipmentInput {
   customerName: string;
@@ -40,11 +41,11 @@ interface AppContextType {
   upsellConfig: UpsellConfig;
   integrations: IntegrationConfig[];
   widgetSettings: WidgetSettings;
-  isPublicTrackingOpen: boolean;
-  publicTrackingCode: string | null;
   
   // Actions
-  switchUser: (userId: string) => void;
+  loginMerchant: (userData: { id?: string; name: string; email: string; storeName: string }) => void;
+  logoutMerchant: () => void;
+  openPublicTracking: (code: string) => void;
   createSingleShipment: (data: CreateShipmentInput) => { success: boolean; shipment?: Shipment; error?: string };
   createBatchShipments: (items: CreateShipmentInput[]) => { success: boolean; count: number; error?: string };
   updateShipmentStatus: (id: string, status: TrackingStatus) => void;
@@ -54,8 +55,6 @@ interface AppContextType {
   sendWhatsAppNotification: (shipment: Shipment, status: TrackingStatus) => void;
   updateIntegrations: (integrations: IntegrationConfig[]) => void;
   updateWidgetSettings: (settings: WidgetSettings) => void;
-  openPublicTracking: (code: string) => void;
-  closePublicTracking: () => void;
   recordUpsellClick: (shipmentId: string) => void;
   recordUpsellConversion: (shipmentId: string) => void;
   
@@ -67,35 +66,78 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | null>(null);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User>(Storage.getCurrentUser());
-  const [allUsers, setAllUsers] = useState<User[]>(Storage.getUsers());
-  const [dailyQuota, setDailyQuota] = useState<UserDailyQuota>(Storage.getDailyQuota(currentUser.id));
-  const [shipments, setShipments] = useState<Shipment[]>(Storage.getShipments());
-  const [whatsappTemplates, setWhatsappTemplates] = useState<WhatsAppTemplate[]>(Storage.getWhatsAppTemplates());
-  const [whatsappLogs, setWhatsappLogs] = useState<WhatsAppLog[]>(Storage.getWhatsAppLogs());
-  const [upsellConfig, setUpsellConfig] = useState<UpsellConfig>(Storage.getUpsellConfig());
-  const [integrations, setIntegrations] = useState<IntegrationConfig[]>(Storage.getIntegrations());
-  const [widgetSettings, setWidgetSettings] = useState<WidgetSettings>(Storage.getWidgetSettings());
-  
-  const [isPublicTrackingOpen, setIsPublicTrackingOpen] = useState(false);
-  const [publicTrackingCode, setPublicTrackingCode] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User>(() => Storage.getCurrentUser());
+  const [allUsers, setAllUsers] = useState<User[]>(() => Storage.getUsers());
+  const [dailyQuota, setDailyQuota] = useState<UserDailyQuota>(() => Storage.getDailyQuota(currentUser.id));
+  const [shipments, setShipments] = useState<Shipment[]>(() => Storage.getShipments(currentUser.id));
+  const [whatsappTemplates, setWhatsappTemplates] = useState<WhatsAppTemplate[]>(() => Storage.getWhatsAppTemplates());
+  const [whatsappLogs, setWhatsappLogs] = useState<WhatsAppLog[]>(() => Storage.getWhatsAppLogs());
+  const [upsellConfig, setUpsellConfig] = useState<UpsellConfig>(() => Storage.getUpsellConfig());
+  const [integrations, setIntegrations] = useState<IntegrationConfig[]>(() => Storage.getIntegrations());
+  const [widgetSettings, setWidgetSettings] = useState<WidgetSettings>(() => Storage.getWidgetSettings());
 
-  // Sync quota whenever user changes
+  // Listen to Supabase Auth state or local session
   useEffect(() => {
-    setDailyQuota(Storage.getDailyQuota(currentUser.id));
-  }, [currentUser.id]);
+    if (isSupabaseConfigured()) {
+      supabase.auth.getSession().then(({ data }) => {
+        if (data.session?.user) {
+          const u = data.session.user;
+          const userObj: User = {
+            id: u.id,
+            name: u.user_metadata?.name || currentUser.name,
+            email: u.email || currentUser.email,
+            storeName: u.user_metadata?.store_name || currentUser.storeName,
+            role: (u.user_metadata?.role as any) || 'merchant',
+            dailyLimit: 100,
+            isUnlimited: false,
+            createdAt: u.created_at
+          };
+          Storage.setCurrentUser(userObj);
+          setCurrentUser(userObj);
+          setDailyQuota(Storage.getDailyQuota(userObj.id));
+          setShipments(Storage.getShipments(userObj.id));
+        }
+      });
+    } else {
+      const sess = localStorage.getItem('rastreio_merchant_session');
+      if (sess) {
+        try {
+          const parsed = JSON.parse(sess);
+          if (parsed.email && parsed.email !== currentUser.email) {
+            loginMerchant(parsed);
+          }
+        } catch {}
+      }
+    }
+  }, []);
 
-  const switchUser = (userId: string) => {
-    const target = allUsers.find(u => u.id === userId);
-    if (target) {
-      Storage.setCurrentUser(target);
-      setCurrentUser(target);
-      setDailyQuota(Storage.getDailyQuota(target.id));
+  const loginMerchant = (userData: { id?: string; name: string; email: string; storeName: string }) => {
+    const userObj: User = {
+      id: userData.id || `usr_${Date.now()}`,
+      name: userData.name || 'Lojista Oficial',
+      email: userData.email,
+      storeName: userData.storeName || 'Minha Loja Drop',
+      role: 'merchant',
+      dailyLimit: 100,
+      isUnlimited: false,
+      createdAt: new Date().toISOString()
+    };
+
+    Storage.setCurrentUser(userObj);
+    setCurrentUser(userObj);
+    setDailyQuota(Storage.getDailyQuota(userObj.id));
+    setShipments(Storage.getShipments(userObj.id));
+    setAllUsers(Storage.getUsers());
+  };
+
+  const logoutMerchant = () => {
+    localStorage.removeItem('rastreio_merchant_session');
+    if (isSupabaseConfigured()) {
+      supabase.auth.signOut();
     }
   };
 
   const createSingleShipment = (data: CreateShipmentInput) => {
-    // Check quota
     const quotaResult = Storage.consumeDailyQuota(currentUser.id, 1);
     if (!quotaResult.success) {
       return { success: false, error: quotaResult.reason };
@@ -140,10 +182,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       upsellConversions: 0
     };
 
-    Storage.addShipment(newShipment);
-    setShipments(Storage.getShipments());
+    Storage.addShipment(newShipment, currentUser.id);
+    setShipments(Storage.getShipments(currentUser.id));
 
-    // Auto-trigger WhatsApp notification if template enabled
     sendWhatsAppNotification(newShipment, initialStatus);
 
     return { success: true, shipment: newShipment };
@@ -199,8 +240,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     });
 
-    Storage.addBatchShipments(newBatch);
-    setShipments(Storage.getShipments());
+    Storage.addBatchShipments(newBatch, currentUser.id);
+    setShipments(Storage.getShipments(currentUser.id));
 
     return { success: true, count };
   };
@@ -226,23 +267,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     Storage.updateShipment(updated);
-    setShipments(Storage.getShipments());
+    setShipments(Storage.getShipments(currentUser.id));
 
-    // Trigger WhatsApp notification for this status update
     sendWhatsAppNotification(updated, status);
   };
 
   const deleteShipment = (id: string) => {
     Storage.deleteShipment(id);
-    setShipments(Storage.getShipments());
+    setShipments(Storage.getShipments(currentUser.id));
   };
 
   const sendWhatsAppNotification = (shipment: Shipment, status: TrackingStatus) => {
     const tmpl = whatsappTemplates.find(t => t.triggerStatus === status && t.enabled);
     if (!tmpl) return;
 
-    // Replace dynamic placeholders
-    const trackingLink = `${window.location.origin}/#tracking=${shipment.code}`;
+    const trackingLink = `${window.location.origin}/r/${shipment.code}`;
     let msg = tmpl.message
       .replace(/{nome}/g, shipment.customerName.split(' ')[0])
       .replace(/{pedido}/g, shipment.orderNumber)
@@ -265,11 +304,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     Storage.addWhatsAppLog(log);
     setWhatsappLogs(Storage.getWhatsAppLogs());
 
-    // Update shipment whatsapp notified flag
     if (!shipment.whatsappNotified) {
       const updated = { ...shipment, whatsappNotified: true };
       Storage.updateShipment(updated);
-      setShipments(Storage.getShipments());
+      setShipments(Storage.getShipments(currentUser.id));
     }
   };
 
@@ -293,22 +331,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setWidgetSettings(settings);
   };
 
-  const openPublicTracking = (code: string) => {
-    setPublicTrackingCode(code);
-    setIsPublicTrackingOpen(true);
-  };
-
-  const closePublicTracking = () => {
-    setIsPublicTrackingOpen(false);
-    setPublicTrackingCode(null);
-  };
-
   const recordUpsellClick = (shipmentId: string) => {
     const s = shipments.find(item => item.id === shipmentId);
     if (s) {
       s.upsellClicks = (s.upsellClicks || 0) + 1;
       Storage.updateShipment(s);
-      setShipments(Storage.getShipments());
+      setShipments(Storage.getShipments(currentUser.id));
     }
   };
 
@@ -317,11 +345,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (s) {
       s.upsellConversions = (s.upsellConversions || 0) + 1;
       Storage.updateShipment(s);
-      setShipments(Storage.getShipments());
+      setShipments(Storage.getShipments(currentUser.id));
     }
   };
 
-  // Admin Actions
   const adminSetUserLimit = (userId: string, newLimit: number, isUnlimited: boolean) => {
     Storage.setAdminUserLimit(userId, newLimit, isUnlimited);
     const updatedUsers = Storage.getUsers();
@@ -341,6 +368,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const openPublicTracking = (code: string) => {
+    window.open(`/r/${code}`, '_blank');
+  };
+
   return (
     <AppContext.Provider value={{
       currentUser,
@@ -352,9 +383,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       upsellConfig,
       integrations,
       widgetSettings,
-      isPublicTrackingOpen,
-      publicTrackingCode,
-      switchUser,
+      loginMerchant,
+      logoutMerchant,
+      openPublicTracking,
       createSingleShipment,
       createBatchShipments,
       updateShipmentStatus,
@@ -364,8 +395,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       sendWhatsAppNotification,
       updateIntegrations,
       updateWidgetSettings,
-      openPublicTracking,
-      closePublicTracking,
       recordUpsellClick,
       recordUpsellConversion,
       adminSetUserLimit,
