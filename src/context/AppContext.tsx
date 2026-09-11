@@ -79,14 +79,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Listen to Supabase Auth state or local session
   useEffect(() => {
     if (isSupabaseConfigured()) {
+      // 1. Initial session check
       supabase.auth.getSession().then(({ data }) => {
         if (data.session?.user) {
           const u = data.session.user;
+          const metaName = u.user_metadata?.full_name || u.user_metadata?.name || u.user_metadata?.user_name || u.user_metadata?.custom_claims?.global_name;
+          const store = u.user_metadata?.store_name || (metaName ? `Loja de ${metaName}` : 'Minha Loja Drop');
           const userObj: User = {
             id: u.id,
-            name: u.user_metadata?.name || currentUser.name,
-            email: u.email || currentUser.email,
-            storeName: u.user_metadata?.store_name || currentUser.storeName,
+            name: metaName || u.email?.split('@')[0] || 'Lojista Oficial',
+            email: u.email || 'lojista@rastreio.roi',
+            storeName: store,
             role: (u.user_metadata?.role as any) || 'merchant',
             dailyLimit: 100,
             isUnlimited: false,
@@ -96,8 +99,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setCurrentUser(userObj);
           setDailyQuota(Storage.getDailyQuota(userObj.id));
           setShipments(Storage.getShipments(userObj.id));
+          localStorage.setItem('rastreio_merchant_session', JSON.stringify({
+            authenticated: true,
+            email: userObj.email,
+            name: userObj.name,
+            storeName: userObj.storeName
+          }));
         }
       });
+
+      // 2. Realtime auth change listener (for Discord / OAuth logins)
+      const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.user) {
+          const u = session.user;
+          const metaName = u.user_metadata?.full_name || u.user_metadata?.name || u.user_metadata?.user_name || u.user_metadata?.custom_claims?.global_name;
+          const store = u.user_metadata?.store_name || (metaName ? `Loja de ${metaName}` : 'Minha Loja Drop');
+          const userObj: User = {
+            id: u.id,
+            name: metaName || u.email?.split('@')[0] || 'Lojista Oficial',
+            email: u.email || 'lojista@rastreio.roi',
+            storeName: store,
+            role: (u.user_metadata?.role as any) || 'merchant',
+            dailyLimit: 100,
+            isUnlimited: false,
+            createdAt: u.created_at
+          };
+          Storage.setCurrentUser(userObj);
+          setCurrentUser(userObj);
+          setDailyQuota(Storage.getDailyQuota(userObj.id));
+          setShipments(Storage.getShipments(userObj.id));
+          localStorage.setItem('rastreio_merchant_session', JSON.stringify({
+            authenticated: true,
+            email: userObj.email,
+            name: userObj.name,
+            storeName: userObj.storeName
+          }));
+        }
+      });
+
+      return () => {
+        authListener?.subscription.unsubscribe();
+      };
     } else {
       const sess = localStorage.getItem('rastreio_merchant_session');
       if (sess) {
