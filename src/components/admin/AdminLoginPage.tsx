@@ -17,7 +17,6 @@ export const AdminLoginPage: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1. If Supabase is configured, authenticate via Supabase Auth
       if (isSupabaseConfigured()) {
         const { data, error: authError } = await supabase.auth.signInWithPassword({
           email: email.trim(),
@@ -44,25 +43,20 @@ export const AdminLoginPage: React.FC = () => {
           return;
         }
 
+        localStorage.setItem('rastreio_admin_session', JSON.stringify({
+          authenticated: true,
+          email: data.user.email,
+          role: 'admin',
+          userId: data.user.id,
+          loggedInAt: new Date().toISOString()
+        }));
+
         setLoading(false);
         navigate('/admin-master');
         return;
-      }
-
-      // 2. Fallback for Dev Environment when Supabase is not configured
-      const adminEmailEnv = import.meta.env.VITE_ADMIN_EMAIL || 'admin@rastreioja.com';
-      if (email.trim().toLowerCase() === adminEmailEnv.toLowerCase()) {
-        localStorage.setItem('rastreio_admin_session', JSON.stringify({
-          authenticated: true,
-          email: adminEmailEnv,
-          role: 'admin',
-          loggedInAt: new Date().toISOString()
-        }));
-        setLoading(false);
-        navigate('/admin-master');
       } else {
         setLoading(false);
-        setError('Acesso restrito. Utilize seu e-mail de Administrador configurado no Supabase.');
+        setError('O serviço Supabase Auth é obrigatório para autenticação de administradores.');
       }
     } catch (err: any) {
       setLoading(false);

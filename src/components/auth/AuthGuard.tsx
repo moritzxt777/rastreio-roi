@@ -58,20 +58,6 @@ export const RequireAdmin: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const checkAdmin = async () => {
-      // 1. Check local session
-      const rawSession = localStorage.getItem('rastreio_admin_session');
-      if (rawSession) {
-        try {
-          const sess = JSON.parse(rawSession);
-          if (sess.authenticated && sess.role === 'admin') {
-            setIsAdmin(true);
-            setChecking(false);
-            return;
-          }
-        } catch {}
-      }
-
-      // 2. Check Supabase session & role
       if (isSupabaseConfigured()) {
         const { data } = await supabase.auth.getSession();
         if (data.session?.user) {
@@ -87,6 +73,22 @@ export const RequireAdmin: React.FC<{ children: React.ReactNode }> = ({ children
             return;
           }
         }
+        setIsAdmin(false);
+        setChecking(false);
+        return;
+      }
+
+      // If Supabase not configured in local environment
+      const rawSession = localStorage.getItem('rastreio_admin_session');
+      if (rawSession) {
+        try {
+          const sess = JSON.parse(rawSession);
+          if (sess.authenticated && sess.role === 'admin') {
+            setIsAdmin(true);
+            setChecking(false);
+            return;
+          }
+        } catch {}
       }
 
       setIsAdmin(false);
