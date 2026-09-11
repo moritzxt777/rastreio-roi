@@ -184,6 +184,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const syncShipmentToSupabase = async (shipment: Shipment) => {
+    if (!isSupabaseConfigured()) return;
+    try {
+      const { data: created, error } = await supabase
+        .from('shipments')
+        .upsert({
+          code: shipment.code.toUpperCase(),
+          carrier: shipment.carrier,
+          customer_name: shipment.customerName,
+          customer_phone: shipment.customerPhone,
+          customer_email: shipment.customerEmail,
+          order_number: shipment.orderNumber,
+          order_value: shipment.orderValue,
+          product_name: shipment.productName,
+          origin_city: shipment.originCity,
+          origin_state: shipment.originState,
+          destination_city: shipment.destinationCity,
+          destination_state: shipment.destinationState,
+          destination_zip: shipment.destinationZip,
+          status: shipment.status,
+          estimated_delivery_date: shipment.estimatedDeliveryDate
+        }, { onConflict: 'code' })
+        .select('id')
+        .single();
+
+      if (created?.id && shipment.events?.length > 0) {
+        // Delete old events if updating
+        await supabase.from('shipment_events').delete().eq('shipment_id', created.id);
+
+        const dbEvents = shipment.events.map(ev => ({
+          shipment_id: created.id,
+          status: ev.status,
+          title: ev.title,
+          description: ev.description,
+          location: ev.location,
+          event_date: new Date().toISOString().split('T')[0],
+          event_time: new Date().toTimeString().split(' ')[0]
+        }));
+        await supabase.from('shipment_events').insert(dbEvents);
+      }
+    } catch (err) {
+      console.warn('Supabase sync warning:', err);
+    }
+  };
+
   const createSingleShipment = (data: CreateShipmentInput) => {
     const quotaResult = Storage.consumeDailyQuota(currentUser.id, 1);
     if (!quotaResult.success) {
@@ -230,6 +275,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     Storage.addShipment(newShipment, currentUser.id);
+    syncShipmentToSupabase(newShipment);
     setShipments(Storage.getShipments(currentUser.id));
 
     sendWhatsAppNotification(newShipment, initialStatus);
@@ -314,6 +360,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     Storage.updateShipment(updated);
+    syncShipmentToSupabase(updated);
     setShipments(Storage.getShipments(currentUser.id));
 
     sendWhatsAppNotification(updated, status);
@@ -354,6 +401,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!shipment.whatsappNotified) {
       const updated = { ...shipment, whatsappNotified: true };
       Storage.updateShipment(updated);
+    syncShipmentToSupabase(updated);
       setShipments(Storage.getShipments(currentUser.id));
     }
   };
