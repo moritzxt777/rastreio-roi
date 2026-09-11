@@ -1,7 +1,12 @@
--- SUPABASE SCHEMA FOR RASTREIO ROI / RASTREIO JA MELHORADO
--- Run this in your Supabase SQL Editor
+-- =========================================================================
+-- SECURE SUPABASE SCHEMA FOR RASTREIO ROI
+-- Run this script in your Supabase SQL Editor
+-- =========================================================================
 
--- 1. Profiles / Users Table
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 1. Profiles Table (Linked to auth.users)
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   name TEXT NOT NULL,
@@ -14,22 +19,46 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Enable RLS on profiles
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can read own profile" 
-  ON public.profiles FOR SELECT 
+-- Profiles Policies
+CREATE POLICY "Users can view own profile"
+  ON public.profiles FOR SELECT
   USING (auth.uid() = id);
 
-CREATE POLICY "Users can update own profile" 
-  ON public.profiles FOR UPDATE 
+CREATE POLICY "Users can update own profile"
+  ON public.profiles FOR UPDATE
   USING (auth.uid() = id);
 
-CREATE POLICY "Admins have full access on profiles" 
-  ON public.profiles FOR ALL 
+CREATE POLICY "Admins have full access to profiles"
+  ON public.profiles FOR ALL
   USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
   );
+
+-- Trigger to automatically create profile on signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, name, email, store_name, role, daily_limit, is_unlimited)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'name', 'Lojista'),
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'store_name', 'Minha Loja'),
+    COALESCE(NEW.raw_user_meta_data->>'role', 'merchant'),
+    100,
+    FALSE
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- 2. Daily Quotas Table
 CREATE TABLE IF NOT EXISTS public.daily_quotas (
@@ -46,12 +75,12 @@ CREATE TABLE IF NOT EXISTS public.daily_quotas (
 
 ALTER TABLE public.daily_quotas ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can read own quota" 
-  ON public.daily_quotas FOR SELECT 
+CREATE POLICY "Users can view own daily quota"
+  ON public.daily_quotas FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Admins can manage all quotas" 
-  ON public.daily_quotas FOR ALL 
+CREATE POLICY "Admins can manage all daily quotas"
+  ON public.daily_quotas FOR ALL
   USING (
     EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
   );
@@ -83,31 +112,35 @@ CREATE TABLE IF NOT EXISTS public.shipments (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_shipments_code ON public.shipments(code);
-CREATE INDEX idx_shipments_user_id ON public.shipments(user_id);
+CREATE INDEX IF NOT EXISTS idx_shipments_code ON public.shipments(code);
+CREATE INDEX IF NOT EXISTS idx_shipments_user_id ON public.shipments(user_id);
 
 ALTER TABLE public.shipments ENABLE ROW LEVEL SECURITY;
 
--- Public can view shipment by code for tracking page
-CREATE POLICY "Public tracking page can read shipment by code" 
-  ON public.shipments FOR SELECT 
-  TO anon, authenticated
-  USING (true);
+-- STRICT RLS: Only the owner merchant can access their shipments table
+CREATE POLICY "Merchants view own shipments"
+  ON public.shipments FOR SELECT
+  USING (auth.uid() = user_id);
 
--- User can manage own shipments
-CREATE POLICY "Merchants can insert own shipments" 
-  ON public.shipments FOR INSERT 
+CREATE POLICY "Merchants insert own shipments"
+  ON public.shipments FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Merchants can update own shipments" 
-  ON public.shipments FOR UPDATE 
+CREATE POLICY "Merchants update own shipments"
+  ON public.shipments FOR UPDATE
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Merchants can delete own shipments" 
-  ON public.shipments FOR DELETE 
+CREATE POLICY "Merchants delete own shipments"
+  ON public.shipments FOR DELETE
   USING (auth.uid() = user_id);
 
--- 4. Shipment Events (Timeline) Table
+CREATE POLICY "Admins manage all shipments"
+  ON public.shipments FOR ALL
+  USING (
+    EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- 4. Shipment Events Table
 CREATE TABLE IF NOT EXISTS public.shipment_events (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   shipment_id UUID REFERENCES public.shipments(id) ON DELETE CASCADE,
@@ -120,17 +153,18 @@ CREATE TABLE IF NOT EXISTS public.shipment_events (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_events_shipment_id ON public.shipment_events(shipment_id);
+CREATE INDEX IF NOT EXISTS idx_events_shipment_id ON public.shipment_events(shipment_id);
 
 ALTER TABLE public.shipment_events ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Public can read events" 
-  ON public.shipment_events FOR SELECT 
-  TO anon, authenticated
-  USING (true);
+CREATE POLICY "Merchants view events of own shipments"
+  ON public.shipment_events FOR SELECT
+  USING (
+    EXISTS (SELECT 1 FROM public.shipments WHERE id = shipment_events.shipment_id AND user_id = auth.uid())
+  );
 
-CREATE POLICY "Merchants can insert events for their shipments" 
-  ON public.shipment_events FOR INSERT 
+CREATE POLICY "Merchants insert events for own shipments"
+  ON public.shipment_events FOR INSERT
   WITH CHECK (
     EXISTS (SELECT 1 FROM public.shipments WHERE id = shipment_id AND user_id = auth.uid())
   );
@@ -147,7 +181,7 @@ CREATE TABLE IF NOT EXISTS public.whatsapp_templates (
 );
 
 ALTER TABLE public.whatsapp_templates ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users own whatsapp templates" ON public.whatsapp_templates FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users manage own templates" ON public.whatsapp_templates FOR ALL USING (auth.uid() = user_id);
 
 CREATE TABLE IF NOT EXISTS public.whatsapp_logs (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -163,9 +197,74 @@ CREATE TABLE IF NOT EXISTS public.whatsapp_logs (
 );
 
 ALTER TABLE public.whatsapp_logs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users own whatsapp logs" ON public.whatsapp_logs FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users manage own logs" ON public.whatsapp_logs FOR ALL USING (auth.uid() = user_id);
 
--- 6. RPC: Increment Quota Atomically
+-- =========================================================================
+-- SECURE RPC: PUBLIC TRACKING QUERY (ZERO LEAKAGE)
+-- Returns only the single matched shipment + its events for anonymous users
+-- =========================================================================
+CREATE OR REPLACE FUNCTION public.get_shipment_by_code(p_code TEXT)
+RETURNS JSON AS $$
+DECLARE
+  v_shipment RECORD;
+  v_events JSON;
+BEGIN
+  -- Lookup single shipment by code or order number (case insensitive)
+  SELECT * INTO v_shipment
+  FROM public.shipments
+  WHERE UPPER(code) = UPPER(TRIM(p_code))
+     OR UPPER(order_number) = UPPER(TRIM(p_code))
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RETURN NULL;
+  END IF;
+
+  -- Get timeline events for this shipment
+  SELECT COALESCE(
+    json_agg(
+      json_build_object(
+        'id', id,
+        'status', status,
+        'title', title,
+        'description', description,
+        'location', location,
+        'date', TO_CHAR(event_date, 'DD/MM/YYYY'),
+        'time', TO_CHAR(event_time, 'HH24:MI')
+      ) ORDER BY event_date DESC, event_time DESC
+    ), '[]'::json
+  ) INTO v_events
+  FROM public.shipment_events
+  WHERE shipment_id = v_shipment.id;
+
+  -- Return sanitized single object
+  RETURN json_build_object(
+    'id', v_shipment.id,
+    'code', v_shipment.code,
+    'carrier', v_shipment.carrier,
+    'customerName', v_shipment.customer_name,
+    'customerPhone', v_shipment.customer_phone,
+    'orderNumber', v_shipment.order_number,
+    'orderValue', v_shipment.order_value,
+    'productName', v_shipment.product_name,
+    'originCity', v_shipment.origin_city,
+    'originState', v_shipment.origin_state,
+    'destinationCity', v_shipment.destination_city,
+    'destinationState', v_shipment.destination_state,
+    'destinationZip', v_shipment.destination_zip,
+    'status', v_shipment.status,
+    'estimatedDeliveryDate', TO_CHAR(v_shipment.estimated_delivery_date, 'YYYY-MM-DD'),
+    'events', v_events
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Allow anonymous & authenticated users to execute only this RPC
+GRANT EXECUTE ON FUNCTION public.get_shipment_by_code(TEXT) TO anon, authenticated;
+
+-- =========================================================================
+-- ATOMIC QUOTA CONSUMPTION RPC
+-- =========================================================================
 CREATE OR REPLACE FUNCTION public.consume_daily_quota(p_user_id UUID, p_count INTEGER DEFAULT 1)
 RETURNS JSON AS $$
 DECLARE
@@ -174,7 +273,10 @@ DECLARE
   v_unlimited BOOLEAN;
 BEGIN
   -- Get user limit configuration
-  SELECT daily_limit, is_unlimited INTO v_limit, v_unlimited FROM public.profiles WHERE id = p_user_id;
+  SELECT daily_limit, is_unlimited INTO v_limit, v_unlimited 
+  FROM public.profiles 
+  WHERE id = p_user_id;
+
   IF v_limit IS NULL THEN
     v_limit := 100;
     v_unlimited := FALSE;
@@ -192,14 +294,14 @@ BEGIN
   RETURNING * INTO v_quota;
 
   IF NOT v_quota.is_unlimited AND v_quota.used_count > v_quota.daily_limit THEN
-    -- Rollback
+    -- Rollback increment
     UPDATE public.daily_quotas 
     SET used_count = used_count - p_count 
     WHERE id = v_quota.id;
 
     RETURN json_build_object(
       'success', false, 
-      'message', 'Limite diário de 100 códigos atingido. A cota zera à meia-noite.'
+      'message', 'Limite diário atingido (' || v_quota.used_count || '/' || v_quota.daily_limit || '). A cota zera à meia-noite.'
     );
   END IF;
 
@@ -211,3 +313,5 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION public.consume_daily_quota(UUID, INTEGER) TO authenticated;
