@@ -40,9 +40,48 @@ const MerchantLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =
   );
 };
 
+const getHostType = (): 'loggi' | 'jadlog' | 'default' => {
+  if (typeof window === 'undefined') return 'default';
+  const hostname = window.location.hostname.toLowerCase();
+  if (hostname.includes('loggi')) return 'loggi';
+  if (hostname.includes('jadlog') || hostname.includes('jadxlog')) return 'jadlog';
+  return 'default';
+};
+
 export const App: React.FC = () => {
   const navigate = useNavigate();
+  const hostType = getHostType();
 
+  // Multi-Domain: Loggi Portal Domain (e.g. rastreio-loggi.vercel.app / loggi-transportadora.site)
+  if (hostType === 'loggi') {
+    return (
+      <Routes>
+        <Route path="/" element={<LoggiPortalView />} />
+        <Route path="/home" element={<LoggiPortalView />} />
+        <Route path="/rastreamento" element={<LoggiPortalView />} />
+        <Route path="/rastreamento/:code" element={<LoggiPortalView />} />
+        <Route path="/r/:code" element={<LoggiPortalView />} />
+        <Route path="/:code" element={<LoggiPortalView />} />
+      </Routes>
+    );
+  }
+
+  // Multi-Domain: Jadlog Portal Domain (e.g. rastreio-jadlog.vercel.app / jadxlog.site)
+  if (hostType === 'jadlog') {
+    return (
+      <Routes>
+        <Route path="/" element={<JadlogPortalView />} />
+        <Route path="/home" element={<JadlogPortalView />} />
+        <Route path="/jadlog/home" element={<JadlogPortalView />} />
+        <Route path="/rastreamento" element={<JadlogPortalView />} />
+        <Route path="/rastreamento/:code" element={<JadlogPortalView />} />
+        <Route path="/r/:code" element={<JadlogPortalView />} />
+        <Route path="/:code" element={<JadlogPortalView />} />
+      </Routes>
+    );
+  }
+
+  // Main Domain: SaaS Landing Page + Merchant Dashboard + Full Routing
   return (
     <Routes>
       {/* 1. Public Landing Page */}
@@ -51,7 +90,7 @@ export const App: React.FC = () => {
       <Route path="/login" element={<LandingPage />} />
       <Route path="/register" element={<LandingPage />} />
 
-            {/* 2.1 Cloned Carrier Tracking Portals (Jadlog & Loggi) */}
+      {/* 2.1 Cloned Carrier Tracking Portals (Jadlog & Loggi) */}
       <Route path="/jadlog" element={<JadlogPortalView />} />
       <Route path="/jadlog/home" element={<JadlogPortalView />} />
       <Route path="/jadlog/rastreamento/:code" element={<JadlogPortalView />} />
