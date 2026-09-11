@@ -8,6 +8,8 @@ import { TrackingGeneratorView } from './components/generator/TrackingGeneratorV
 import { OrdersView } from './components/orders/OrdersView';
 import { UpsellSettingsView } from './components/tracking/UpsellSettingsView';
 import { PublicTrackingView } from './components/tracking/PublicTrackingView';
+import { JadlogPortalView } from './components/portals/JadlogPortalView';
+import { LoggiPortalView } from './components/portals/LoggiPortalView';
 import { WhatsAppView } from './components/whatsapp/WhatsAppView';
 import { IntegrationsView } from './components/integrations/IntegrationsView';
 import { ShippingToolsView } from './components/shipping/ShippingToolsView';
@@ -48,6 +50,18 @@ export const App: React.FC = () => {
       <Route path="/home" element={<LandingPage />} />
       <Route path="/login" element={<LandingPage />} />
       <Route path="/register" element={<LandingPage />} />
+
+            {/* 2.1 Cloned Carrier Tracking Portals (Jadlog & Loggi) */}
+      <Route path="/jadlog" element={<JadlogPortalView />} />
+      <Route path="/jadlog/home" element={<JadlogPortalView />} />
+      <Route path="/jadlog/rastreamento/:code" element={<JadlogPortalView />} />
+      <Route path="/jadlog/:code" element={<JadlogPortalView />} />
+
+      <Route path="/loggi" element={<LoggiPortalView />} />
+      <Route path="/loggi/home" element={<LoggiPortalView />} />
+      <Route path="/loggi/rastreamento" element={<LoggiPortalView />} />
+      <Route path="/loggi/rastreamento/:code" element={<LoggiPortalView />} />
+      <Route path="/loggi/:code" element={<LoggiPortalView />} />
 
       {/* 2. Public Tracking Routes (Secure RPC lookup with 404) */}
       <Route path="/r/:code" element={<PublicTrackingView />} />
