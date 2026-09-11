@@ -421,21 +421,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const getTrackingUrl = (code: string): string => {
+    const clean = encodeURIComponent(code);
     const custom = widgetSettings.customTrackingDomain?.trim();
     if (custom) {
-      if (custom.includes('loggi-transportadora.site')) {
-        return `https://www.loggi-transportadora.site/rastreamento?codigo=${encodeURIComponent(code)}`;
+      if (custom.includes('rastreio-loggi') || custom.includes('loggi')) {
+        return `https://rastreio-loggi.vercel.app/rastreamento/${clean}`;
+      }
+      if (custom.includes('jadlog')) {
+        return `https://jadlog-rastreamento.vercel.app/rastreamento/${clean}`;
       }
       if (custom.includes('{code}')) {
-        return custom.replace('{code}', encodeURIComponent(code));
+        return custom.replace('{code}', clean);
       }
       if (custom.endsWith('/')) {
-        return `${custom}${encodeURIComponent(code)}`;
+        return `${custom}${clean}`;
       }
-      return `${custom}/r/${encodeURIComponent(code)}`;
+      return `${custom}/r/${clean}`;
     }
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://rastreio-roi.vercel.app';
-    return `${origin}/r/${encodeURIComponent(code)}`;
+    return `${origin}/r/${clean}`;
   };
 
   const openPublicTracking = (code: string) => {

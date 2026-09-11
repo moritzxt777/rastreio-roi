@@ -106,7 +106,8 @@ export const IntegrationsView: React.FC = () => {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Option 1: Loggi */}
           <button
             type="button"
             onClick={() => {
@@ -116,23 +117,51 @@ export const IntegrationsView: React.FC = () => {
               });
             }}
             className={`p-3.5 rounded-xl border text-left transition flex items-center justify-between ${
-              widgetSettings.customTrackingDomain?.includes('rastreio-loggi.vercel.app')
+              widgetSettings.customTrackingDomain?.includes('rastreio-loggi')
                 ? 'border-brand-500 bg-brand-500/10 text-white shadow-lg'
                 : 'border-slate-800 bg-navy-950 text-slate-300 hover:border-slate-700'
             }`}
           >
             <div>
               <div className="font-bold text-xs text-white flex items-center gap-1.5">
-                <span>Portal Loggi Transportadora</span>
-                <span className="text-[9px] bg-brand-500/20 text-brand-300 px-1.5 py-0.5 rounded font-mono">Recomendado</span>
+                <span>Portal Loggi</span>
+                <span className="text-[9px] bg-brand-500/20 text-brand-300 px-1.5 py-0.5 rounded font-mono">Oficial</span>
               </div>
               <div className="text-[11px] text-slate-400 font-mono mt-0.5">https://rastreio-loggi.vercel.app</div>
             </div>
-            {widgetSettings.customTrackingDomain?.includes('rastreio-loggi.vercel.app') && (
+            {widgetSettings.customTrackingDomain?.includes('rastreio-loggi') && (
               <Check className="w-4 h-4 text-brand-400 shrink-0" />
             )}
           </button>
 
+          {/* Option 2: Jadlog */}
+          <button
+            type="button"
+            onClick={() => {
+              updateWidgetSettings({
+                ...widgetSettings,
+                customTrackingDomain: 'https://jadlog-rastreamento.vercel.app'
+              });
+            }}
+            className={`p-3.5 rounded-xl border text-left transition flex items-center justify-between ${
+              widgetSettings.customTrackingDomain?.includes('jadlog-rastreamento')
+                ? 'border-brand-500 bg-brand-500/10 text-white shadow-lg'
+                : 'border-slate-800 bg-navy-950 text-slate-300 hover:border-slate-700'
+            }`}
+          >
+            <div>
+              <div className="font-bold text-xs text-white flex items-center gap-1.5">
+                <span>Portal Jadlog</span>
+                <span className="text-[9px] bg-red-500/20 text-red-300 px-1.5 py-0.5 rounded font-mono">Oficial</span>
+              </div>
+              <div className="text-[11px] text-slate-400 font-mono mt-0.5">https://jadlog-rastreamento.vercel.app</div>
+            </div>
+            {widgetSettings.customTrackingDomain?.includes('jadlog-rastreamento') && (
+              <Check className="w-4 h-4 text-brand-400 shrink-0" />
+            )}
+          </button>
+
+          {/* Option 3: ROI Native */}
           <button
             type="button"
             onClick={() => {
@@ -149,9 +178,9 @@ export const IntegrationsView: React.FC = () => {
           >
             <div>
               <div className="font-bold text-xs text-white flex items-center gap-1.5">
-                <span>Portal Nativo Rastreio ROI (Com Upsell & WhatsApp)</span>
+                <span>Portal Rastreio ROI (+Upsell)</span>
               </div>
-              <div className="text-[11px] text-slate-400 font-mono mt-0.5">https://rastreio-roi.vercel.app/r/{"{codigo}"}</div>
+              <div className="text-[11px] text-slate-400 font-mono mt-0.5">https://rastreio-roi.vercel.app/r/{"{code}"}</div>
             </div>
             {(!widgetSettings.customTrackingDomain || widgetSettings.customTrackingDomain.includes('rastreio-roi')) && (
               <Check className="w-4 h-4 text-brand-400 shrink-0" />
