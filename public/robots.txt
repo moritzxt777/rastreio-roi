@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /r/*
+Allow: /rastreio/*
+Disallow: /admin
+Disallow: /api/
+
+Sitemap: https://seudominio.com.br/sitemap.xml
