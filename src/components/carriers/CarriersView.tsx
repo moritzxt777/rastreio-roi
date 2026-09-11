@@ -109,13 +109,13 @@ export const CarriersView: React.FC = () => {
                     )}
                   </div>
                   <a
-                    href="https://www.loggi-transportadora.site"
+                    href="https://rastreio-loggi.vercel.app"
                     target="_blank"
                     rel="noreferrer"
                     onClick={(e) => e.stopPropagation()}
                     className="inline-flex items-center space-x-1 text-xs text-brand-400 hover:underline font-mono"
                   >
-                    <span>www.loggi-transportadora.site</span>
+                    <span>rastreio-loggi.vercel.app</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
@@ -152,13 +152,13 @@ export const CarriersView: React.FC = () => {
                     )}
                   </div>
                   <a
-                    href="https://www.jadxlog.site"
+                    href="https://jadlog-rastreamento.vercel.app"
                     target="_blank"
                     rel="noreferrer"
                     onClick={(e) => e.stopPropagation()}
                     className="inline-flex items-center space-x-1 text-xs text-brand-400 hover:underline font-mono"
                   >
-                    <span>www.jadxlog.site</span>
+                    <span>jadlog-rastreamento.vercel.app</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>

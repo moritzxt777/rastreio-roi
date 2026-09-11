@@ -112,11 +112,11 @@ export const IntegrationsView: React.FC = () => {
             onClick={() => {
               updateWidgetSettings({
                 ...widgetSettings,
-                customTrackingDomain: 'https://www.loggi-transportadora.site/rastreamento'
+                customTrackingDomain: 'https://rastreio-loggi.vercel.app'
               });
             }}
             className={`p-3.5 rounded-xl border text-left transition flex items-center justify-between ${
-              widgetSettings.customTrackingDomain?.includes('loggi-transportadora.site')
+              widgetSettings.customTrackingDomain?.includes('rastreio-loggi.vercel.app')
                 ? 'border-brand-500 bg-brand-500/10 text-white shadow-lg'
                 : 'border-slate-800 bg-navy-950 text-slate-300 hover:border-slate-700'
             }`}
@@ -126,9 +126,9 @@ export const IntegrationsView: React.FC = () => {
                 <span>Portal Loggi Transportadora</span>
                 <span className="text-[9px] bg-brand-500/20 text-brand-300 px-1.5 py-0.5 rounded font-mono">Recomendado</span>
               </div>
-              <div className="text-[11px] text-slate-400 font-mono mt-0.5">https://www.loggi-transportadora.site/rastreamento</div>
+              <div className="text-[11px] text-slate-400 font-mono mt-0.5">https://rastreio-loggi.vercel.app</div>
             </div>
-            {widgetSettings.customTrackingDomain?.includes('loggi-transportadora.site') && (
+            {widgetSettings.customTrackingDomain?.includes('rastreio-loggi.vercel.app') && (
               <Check className="w-4 h-4 text-brand-400 shrink-0" />
             )}
           </button>
@@ -166,7 +166,7 @@ export const IntegrationsView: React.FC = () => {
               type="text"
               value={widgetSettings.customTrackingDomain || ''}
               onChange={(e) => updateWidgetSettings({ ...widgetSettings, customTrackingDomain: e.target.value })}
-              placeholder="https://www.loggi-transportadora.site/rastreamento"
+              placeholder="https://rastreio-loggi.vercel.app"
               className="flex-1 rounded-xl border border-slate-800 bg-navy-950 px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-slate-600 focus:border-brand-500 focus:outline-none"
             />
           </div>

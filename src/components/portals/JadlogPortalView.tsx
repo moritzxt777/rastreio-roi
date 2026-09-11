@@ -7,19 +7,14 @@ import { Shipment, TrackingEvent } from '../../types';
 import { 
   Search, 
   Truck, 
-  Package, 
   MapPin, 
   Calendar, 
   Clock, 
   CheckCircle2, 
   AlertCircle, 
-  ChevronRight, 
-  HelpCircle,
-  Phone,
-  ArrowRight,
   ShieldCheck,
   Building2,
-  FileText
+  ExternalLink
 } from 'lucide-react';
 
 export const JadlogPortalView: React.FC = () => {
@@ -81,34 +76,37 @@ export const JadlogPortalView: React.FC = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputCode.trim()) {
-      navigate(`/jadlog/${inputCode.trim().toUpperCase()}`);
+      navigate(`/rastreamento/${inputCode.trim().toUpperCase()}`);
     }
   };
 
   return (
     <div className="min-h-screen bg-[#F5F6F8] text-[#333333] font-sans flex flex-col justify-between">
       <Helmet>
-        <title>{shipment ? `Rastreamento Jadlog - ${shipment.code}` : 'Jadlog - Rastreie sua encomenda'}</title>
+        <title>{shipment ? `Rastreamento Jadlog - ${shipment.code}` : 'Jadlog - Sua encomenda no melhor caminho'}</title>
         <meta name="description" content="Acompanhe o rastreamento da sua encomenda em tempo real na Jadlog." />
+        <link rel="icon" href="https://www.jadlog.com.br/jadlog/img/favicon.png" />
       </Helmet>
 
       {/* TOP BAR / JADLOG HEADER */}
       <header className="bg-[#E30613] text-white shadow-md">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/jadlog" className="flex items-center space-x-2">
-            <div className="bg-white px-3 py-1 rounded font-black text-[#E30613] tracking-tighter text-xl italic shadow-sm">
-              JAD<span className="text-[#0A192F]">LOG</span>
+          <Link to="/" className="flex items-center space-x-3">
+            {/* Official Jadlog Logo Badge */}
+            <div className="bg-white px-3 py-1 rounded font-black tracking-tighter text-xl italic shadow-sm flex items-center space-x-0.5">
+              <span className="text-[#E30613]">JAD</span>
+              <span className="text-[#0A192F]">LOG</span>
             </div>
-            <span className="hidden sm:inline text-xs font-semibold text-white/90 border-l border-white/30 pl-2">
+            <span className="hidden sm:inline text-xs font-semibold text-white/90 border-l border-white/30 pl-3">
               Sua encomenda no melhor caminho
             </span>
           </Link>
 
           <nav className="hidden md:flex items-center space-x-6 text-xs font-bold uppercase tracking-wider">
-            <Link to="/jadlog" className="hover:text-white/80 transition">Rastreamento</Link>
-            <a href="#unidades" className="hover:text-white/80 transition">Unidades</a>
-            <a href="#servicos" className="hover:text-white/80 transition">Serviços</a>
-            <a href="#contato" className="hover:text-white/80 transition">Fale Conosco</a>
+            <Link to="/" className="hover:text-white/80 transition">Rastreamento</Link>
+            <a href="https://www.jadlog.com.br/jadlog/unidades" target="_blank" rel="noreferrer" className="hover:text-white/80 transition">Unidades</a>
+            <a href="https://www.jadlog.com.br/jadlog/servicos" target="_blank" rel="noreferrer" className="hover:text-white/80 transition">Serviços</a>
+            <a href="https://www.jadlog.com.br/jadlog/contato" target="_blank" rel="noreferrer" className="hover:text-white/80 transition">Fale Conosco</a>
           </nav>
         </div>
       </header>
@@ -164,16 +162,8 @@ export const JadlogPortalView: React.FC = () => {
               <h2 className="text-lg font-bold text-gray-900">Remessa Não Localizada</h2>
               <p className="text-xs text-gray-500 mt-1 max-w-md mx-auto">
                 Não localizamos nenhuma remessa cadastrada com o código <strong className="text-[#E30613] font-mono">{cleanCode}</strong>.
-                Verifique os dígitos e tente novamente.
               </p>
             </div>
-            <Link
-              to="/jadlog"
-              onClick={() => { setInputCode(''); setSearched(false); }}
-              className="inline-block bg-[#0A192F] text-white text-xs font-bold px-5 py-2.5 rounded-lg hover:bg-slate-800 transition"
-            >
-              Consultar outro código
-            </Link>
           </div>
         )}
 
@@ -202,19 +192,19 @@ export const JadlogPortalView: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                 <div className="bg-gray-50 p-3.5 rounded-xl">
                   <span className="text-gray-400 font-medium block">Destinatário:</span>
-                  <span className="font-bold text-gray-800 mt-0.5 block">{shipment.customerName}</span>
+                  <span className="font-bold text-gray-800 mt-0.5 block text-sm">{shipment.customerName}</span>
                   <span className="text-gray-500 text-[11px]">{shipment.destinationCity} - {shipment.destinationState}</span>
                 </div>
 
                 <div className="bg-gray-50 p-3.5 rounded-xl">
                   <span className="text-gray-400 font-medium block">Origem da Carga:</span>
-                  <span className="font-bold text-gray-800 mt-0.5 block">{shipment.originCity} - {shipment.originState}</span>
+                  <span className="font-bold text-gray-800 mt-0.5 block text-sm">{shipment.originCity} - {shipment.originState}</span>
                   <span className="text-gray-500 text-[11px]">Unidade Operacional Jadlog</span>
                 </div>
 
                 <div className="bg-gray-50 p-3.5 rounded-xl">
                   <span className="text-gray-400 font-medium block">Documento / Pedido:</span>
-                  <span className="font-bold text-gray-800 mt-0.5 block">#{shipment.orderNumber}</span>
+                  <span className="font-bold text-gray-800 mt-0.5 block text-sm">#{shipment.orderNumber}</span>
                   <span className="text-gray-500 text-[11px]">{shipment.productName}</span>
                 </div>
               </div>
@@ -234,7 +224,6 @@ export const JadlogPortalView: React.FC = () => {
                   const isLatest = index === 0;
                   return (
                     <div key={evt.id || index} className="relative group">
-                      {/* Marker Icon */}
                       <div className={`absolute -left-6 top-0 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                         isLatest 
                           ? 'border-[#E30613] bg-[#E30613] text-white shadow-md' 
@@ -267,35 +256,6 @@ export const JadlogPortalView: React.FC = () => {
                   );
                 })}
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Feature Cards when idle */}
-        {!searched && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-            <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm text-center space-y-2">
-              <div className="w-10 h-10 bg-red-50 text-[#E30613] rounded-xl flex items-center justify-center mx-auto">
-                <Truck className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-xs text-gray-900">Rede de Entregas Jadlog</h3>
-              <p className="text-[11px] text-gray-500">Mais de 500 unidades e pontos Pickup em todo o território nacional.</p>
-            </div>
-
-            <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm text-center space-y-2">
-              <div className="w-10 h-10 bg-blue-50 text-[#0A192F] rounded-xl flex items-center justify-center mx-auto">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-xs text-gray-900">Segurança da Carga</h3>
-              <p className="text-[11px] text-gray-500">Rastreamento minuto a minuto com monitoramento e seguro de transporte.</p>
-            </div>
-
-            <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm text-center space-y-2">
-              <div className="w-10 h-10 bg-emerald-50 text-emerald-700 rounded-xl flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-xs text-gray-900">Suporte ao Destinatário</h3>
-              <p className="text-[11px] text-gray-500">Atendimento centralizado para esclarecer dúvidas sobre sua entrega.</p>
             </div>
           </div>
         )}
