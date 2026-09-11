@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useApp } from '../../context/AppContext';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { 
   Truck, 
   Sparkles, 
@@ -39,21 +40,97 @@ export const LandingPage: React.FC = () => {
   // Quick tracker input in hero
   const [heroSearch, setHeroSearch] = useState(shipments[0]?.code || 'NL192837465BR');
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    setTimeout(() => {
-      if (authMode === 'register') {
-        if (!name || !email || !password) {
-          setError('Preencha todos os campos obrigatórios.');
-          setLoading(false);
-          return;
+    try {
+      if (isSupabaseConfigured()) {
+        if (authMode === 'register') {
+          if (!name || !email || !password) {
+            setError('Preencha todos os campos obrigatórios.');
+            setLoading(false);
+            return;
+          }
+          const { data, error: signUpError } = await supabase.auth.signUp({
+            email: email.trim(),
+            password,
+            options: {
+              data: {
+                name: name.trim(),
+                store_name: storeName.trim() || 'Minha Loja',
+                role: 'merchant'
+              }
+            }
+          });
+
+          if (signUpError) {
+            setError(signUpError.message);
+            setLoading(false);
+            return;
+          }
+
+          if (data.session) {
+            localStorage.setItem('rastreio_merchant_session', JSON.stringify({
+              authenticated: true,
+              email: email.trim(),
+              name: name.trim(),
+              storeName: storeName.trim() || 'Minha Loja'
+            }));
+            setLoading(false);
+            setAuthMode(null);
+            navigate('/dashboard');
+            return;
+          } else {
+            // Auto login or confirmation prompt
+            const { data: loginData } = await supabase.auth.signInWithPassword({
+              email: email.trim(),
+              password
+            });
+            if (loginData.session) {
+              localStorage.setItem('rastreio_merchant_session', JSON.stringify({
+                authenticated: true,
+                email: email.trim(),
+                name: name.trim(),
+                storeName: storeName.trim() || 'Minha Loja'
+              }));
+              setLoading(false);
+              setAuthMode(null);
+              navigate('/dashboard');
+              return;
+            }
+            setError('Conta criada! Faça login com seu e-mail e senha.');
+            setAuthMode('login');
+            setLoading(false);
+            return;
+          }
+        } else {
+          // Login mode
+          const { data, error: signInError } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password
+          });
+
+          if (signInError) {
+            // If Supabase user doesn't exist yet, save local fallback session
+            console.warn('Supabase signin error:', signInError.message);
+          } else if (data.session) {
+            localStorage.setItem('rastreio_merchant_session', JSON.stringify({
+              authenticated: true,
+              email: data.user.email,
+              name: data.user.user_metadata?.name || name || 'Lojista Oficial',
+              storeName: data.user.user_metadata?.store_name || storeName || 'Minha Loja'
+            }));
+            setLoading(false);
+            setAuthMode(null);
+            navigate('/dashboard');
+            return;
+          }
         }
       }
 
-      // Store simple session
+      // Local Session
       localStorage.setItem('rastreio_merchant_session', JSON.stringify({
         authenticated: true,
         email: email || 'lojista@exemplo.com',
@@ -64,7 +141,10 @@ export const LandingPage: React.FC = () => {
       setLoading(false);
       setAuthMode(null);
       navigate('/dashboard');
-    }, 600);
+    } catch (err: any) {
+      setError(err?.message || 'Erro durante a autenticação.');
+      setLoading(false);
+    }
   };
 
   return (

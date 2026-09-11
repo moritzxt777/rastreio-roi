@@ -1,24 +1,40 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
-import { useApp } from '../../context/AppContext';
 
 export const RequireMerchant: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [checking, setChecking] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    if (isSupabaseConfigured()) {
-      supabase.auth.getSession().then(({ data }) => {
-        setAuthenticated(Boolean(data.session?.user));
-        setChecking(false);
-      });
-    } else {
-      // Fallback check
-      const sess = localStorage.getItem('rastreio_merchant_session');
-      setAuthenticated(Boolean(sess));
+    // Check both Supabase Session and Local Session for seamless access
+    const checkAuth = async () => {
+      const localSess = localStorage.getItem('rastreio_merchant_session');
+      if (localSess) {
+        try {
+          const parsed = JSON.parse(localSess);
+          if (parsed.authenticated) {
+            setAuthenticated(true);
+            setChecking(false);
+            return;
+          }
+        } catch {}
+      }
+
+      if (isSupabaseConfigured()) {
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user) {
+          setAuthenticated(true);
+          setChecking(false);
+          return;
+        }
+      }
+
+      setAuthenticated(false);
       setChecking(false);
-    }
+    };
+
+    checkAuth();
   }, []);
 
   if (checking) {
@@ -41,33 +57,43 @@ export const RequireAdmin: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    if (isSupabaseConfigured()) {
-      supabase.auth.getSession().then(async ({ data }) => {
-        if (!data.session?.user) {
-          setIsAdmin(false);
-          setChecking(false);
-          return;
-        }
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.session.user.id)
-          .single();
-
-        setIsAdmin(profile?.role === 'admin');
-        setChecking(false);
-      });
-    } else {
-      // Local fallback
+    const checkAdmin = async () => {
+      // 1. Check local session
       const rawSession = localStorage.getItem('rastreio_admin_session');
-      try {
-        const sess = JSON.parse(rawSession || '{}');
-        setIsAdmin(Boolean(sess.authenticated && sess.role === 'admin'));
-      } catch {
-        setIsAdmin(false);
+      if (rawSession) {
+        try {
+          const sess = JSON.parse(rawSession);
+          if (sess.authenticated && sess.role === 'admin') {
+            setIsAdmin(true);
+            setChecking(false);
+            return;
+          }
+        } catch {}
       }
+
+      // 2. Check Supabase session & role
+      if (isSupabaseConfigured()) {
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', data.session.user.id)
+            .single();
+
+          if (profile?.role === 'admin') {
+            setIsAdmin(true);
+            setChecking(false);
+            return;
+          }
+        }
+      }
+
+      setIsAdmin(false);
       setChecking(false);
-    }
+    };
+
+    checkAdmin();
   }, []);
 
   if (checking) {
