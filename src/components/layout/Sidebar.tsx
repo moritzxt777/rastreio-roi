@@ -32,7 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
   ];
 
   return (
-    <aside className="w-64 border-r border-slate-800 bg-slate-950 flex flex-col justify-between p-4 shrink-0 min-h-[calc(100vh-57px)]">
+    <aside className="w-64 border-r border-slate-800/80 bg-navy-950 flex flex-col justify-between p-4 shrink-0 min-h-[calc(100vh-65px)]">
       <div className="space-y-6">
         <div>
           <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">Menu Principal</p>
@@ -46,8 +46,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
                   onClick={() => onNavigate(item.id)}
                   className={`w-full flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-medium transition-all ${
                     isActive 
-                      ? 'bg-brand-500/10 text-brand-400 font-semibold border border-brand-500/20 shadow-sm' 
-                      : 'text-slate-400 hover:bg-slate-900 hover:text-slate-200'
+                      ? 'bg-brand-500/15 text-brand-300 font-bold border border-brand-500/30 shadow-sm shadow-brand-500/10' 
+                      : 'text-slate-400 hover:bg-navy-900 hover:text-slate-200'
                   }`}
                 >
                   <div className="flex items-center space-x-2.5">
@@ -56,17 +56,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
                   </div>
 
                   {item.badge && (
-                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-300">
+                    <span className="rounded-full bg-navy-900 border border-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-300">
                       {item.badge}
                     </span>
                   )}
                   {item.count !== undefined && (
-                    <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-400">
+                    <span className="rounded-full bg-navy-900 border border-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-400">
                       {item.count}
                     </span>
                   )}
                   {item.highlight && (
-                    <span className="rounded-full bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 text-[9px] font-bold animate-pulse">
+                    <span className="rounded-full bg-brand-500/20 text-brand-300 px-1.5 py-0.5 text-[9px] font-bold animate-pulse">
                       +ROI
                     </span>
                   )}
@@ -78,16 +78,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeView, onNavigate }) => {
       </div>
 
       {/* Quota Widget Bottom */}
-      <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-3.5 text-xs">
+      <div className="rounded-2xl border border-slate-800 bg-navy-900/80 p-4 text-xs shadow-lg">
         <div className="flex items-center justify-between mb-2">
-          <span className="font-semibold text-slate-200">Sua Cota Diária</span>
-          <span className="text-[11px] font-bold text-brand-400">
+          <span className="font-bold text-slate-200">Sua Cota Diária</span>
+          <span className="text-[11px] font-black text-brand-400">
             {dailyQuota.isUnlimited ? 'ILIMITADA' : `${dailyQuota.used}/${dailyQuota.limit}`}
           </span>
         </div>
-        <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-2">
+        <div className="w-full bg-navy-950 h-2 rounded-full overflow-hidden mb-2 border border-slate-800">
           <div 
-            className="h-full bg-gradient-to-r from-brand-500 to-emerald-400"
+            className="h-full bg-gradient-to-r from-brand-500 to-sky-400"
             style={{ width: `${dailyQuota.isUnlimited ? 100 : Math.min(100, (dailyQuota.used / dailyQuota.limit) * 100)}%` }}
           />
         </div>
