@@ -16,24 +16,25 @@ import {
 
 const sampleFallbackShipment: Shipment = {
   id: 'sample_label_01',
-  userId: 'default',
   code: 'NL192837465BR',
+  carrier: 'correios',
   customerName: 'Lucas Silveira de Oliveira',
   customerPhone: '11999998888',
   orderNumber: '10842',
   orderValue: 189.90,
   productName: 'Smartwatch Ultra 9 Titanium Edition',
-  carrier: 'Correios',
   originCity: 'Curitiba',
   originState: 'PR',
   destinationCity: 'São Paulo',
   destinationState: 'SP',
   destinationZip: '01310-100',
-  status: 'POSTED',
-  createdAt: new Date().toISOString(),
+  status: 'posted',
   events: [],
-  timelineHours: 24,
-  whatsappNotified: true
+  estimatedDeliveryDate: '18/09/2026',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  whatsappNotified: true,
+  emailNotified: false
 };
 
 export const ShippingToolsView: React.FC = () => {
