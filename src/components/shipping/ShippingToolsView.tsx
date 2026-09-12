@@ -34,7 +34,9 @@ const sampleFallbackShipment: Shipment = {
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   whatsappNotified: true,
-  emailNotified: false
+  emailNotified: false,
+  upsellClicks: 0,
+  upsellConversions: 0
 };
 
 export const ShippingToolsView: React.FC = () => {
