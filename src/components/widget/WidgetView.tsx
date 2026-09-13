@@ -26,11 +26,19 @@ export const WidgetView: React.FC = () => {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const currentDomain = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')
+    ? window.location.origin
+    : 'https://roi-rastreio.site';
+
   const iframeSnippet = `<div id="rastreio-widget"></div>
-<script src="${window.location.origin}/widget.js" 
+<script src="${currentDomain}/widget.js" 
+  data-domain="${currentDomain}"
   data-color="${settings.primaryColor}" 
   data-theme="dark" 
   data-title="${settings.customTitle}"
+  data-subtitle="${settings.customSubtitle}"
+  data-btn-text="${settings.buttonText}"
+  data-placeholder="${settings.placeholderText}"
   async>
 </script>`;
 
