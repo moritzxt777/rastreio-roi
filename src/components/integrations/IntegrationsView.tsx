@@ -22,9 +22,11 @@ export const IntegrationsView: React.FC = () => {
   const [simResult, setSimResult] = useState<any | null>(null);
 
   // User's own domain / API server host
-  const [apiHost, setApiHost] = useState(
-    typeof window !== 'undefined' ? `${window.location.protocol}//api.${window.location.hostname}` : 'https://api.seudominio.com.br'
-  );
+  const defaultHost = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')
+    ? window.location.origin
+    : 'https://roi-rastreio.site';
+
+  const [apiHost, setApiHost] = useState(defaultHost);
   const [savedHost, setSavedHost] = useState(false);
 
   const handleCopy = (text: string, id: string) => {
@@ -38,7 +40,7 @@ export const IntegrationsView: React.FC = () => {
     const cleanHost = apiHost.replace(/\/$/, '');
     const updated = integrations.map(int => ({
       ...int,
-      webhookUrl: `${cleanHost}/v1/webhooks/${int.platform}`
+      webhookUrl: `${cleanHost}/api/webhooks/${int.platform}`
     }));
     updateIntegrations(updated);
     setSavedHost(true);
@@ -305,9 +307,16 @@ export const IntegrationsView: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-white">{int.name}</h3>
-                  <span className={`text-[10px] font-semibold ${int.enabled ? 'text-emerald-400' : 'text-slate-500'}`}>
-                    {int.enabled ? '● Conectado & Ativo' : '○ Desconectado'}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = integrations.map(i => i.id === int.id ? { ...i, enabled: !i.enabled } : i);
+                      updateIntegrations(updated);
+                    }}
+                    className={`text-[10px] font-semibold flex items-center gap-1 hover:underline cursor-pointer ${int.enabled ? 'text-emerald-400' : 'text-slate-500'}`}
+                  >
+                    <span>{int.enabled ? '● Conectado & Ativo' : '○ Desconectado (Clique para ativar)'}</span>
+                  </button>
                 </div>
               </div>
 
@@ -318,16 +327,19 @@ export const IntegrationsView: React.FC = () => {
 
             {/* Webhook URL */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold text-slate-400">URL do Webhook (Cole na sua plataforma):</label>
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-semibold text-slate-400">URL do Webhook (Cole na sua plataforma):</label>
+              </div>
               <div className="flex items-center space-x-1.5 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5">
                 <input
                   type="text"
                   readOnly
-                  value={int.webhookUrl}
+                  value={int.webhookUrl || `${defaultHost}/api/webhooks/${int.platform}`}
                   className="w-full bg-transparent text-[11px] font-mono text-slate-300 focus:outline-none"
                 />
                 <button
-                  onClick={() => handleCopy(int.webhookUrl, `${int.id}_url`)}
+                  type="button"
+                  onClick={() => handleCopy(int.webhookUrl || `${defaultHost}/api/webhooks/${int.platform}`, `${int.id}_url`)}
                   className="text-slate-500 hover:text-white p-1"
                 >
                   {copiedKey === `${int.id}_url` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -337,20 +349,40 @@ export const IntegrationsView: React.FC = () => {
 
             {/* Secret Token */}
             <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold text-slate-400">Chave Secreta / Token de Validação:</label>
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-semibold text-slate-400">Chave Secreta / Token de Validação:</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const randomTok = `${int.platform}_sec_${Math.random().toString(36).substring(2, 10)}${Date.now().toString(36)}`;
+                    const updated = integrations.map(i => i.id === int.id ? { ...i, webhookSecret: randomTok, enabled: true } : i);
+                    updateIntegrations(updated);
+                  }}
+                  className="text-[10px] text-brand-400 hover:text-brand-300 font-semibold"
+                >
+                  Gerar Token Seguro
+                </button>
+              </div>
               <div className="flex items-center space-x-1.5 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5">
                 <input
-                  type="password"
-                  readOnly
+                  type="text"
+                  placeholder="Cole aqui ou clique em Gerar Token"
                   value={int.webhookSecret}
+                  onChange={(e) => {
+                    const updated = integrations.map(i => i.id === int.id ? { ...i, webhookSecret: e.target.value } : i);
+                    updateIntegrations(updated);
+                  }}
                   className="w-full bg-transparent text-[11px] font-mono text-slate-300 focus:outline-none"
                 />
-                <button
-                  onClick={() => handleCopy(int.webhookSecret, `${int.id}_sec`)}
-                  className="text-slate-500 hover:text-white p-1"
-                >
-                  {copiedKey === `${int.id}_sec` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                </button>
+                {int.webhookSecret && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(int.webhookSecret, `${int.id}_sec`)}
+                    className="text-slate-500 hover:text-white p-1"
+                  >
+                    {copiedKey === `${int.id}_sec` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                )}
               </div>
             </div>
           </div>
