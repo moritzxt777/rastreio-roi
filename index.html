@@ -3,22 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
     <script>
       (function() {
         var h = window.location.hostname.toLowerCase();
         var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-        link.type = 'image/x-icon';
+        link.type = 'image/png';
         link.rel = 'shortcut icon';
         if (h.includes('loggi')) {
           link.href = '/loggi-favicon.ico';
+          link.type = 'image/x-icon';
           document.title = 'Loggi | Melhores fretes, envios rápidos, entregas em todo Brasil';
         } else if (h.includes('jadlog') || h.includes('jadxlog')) {
           link.href = '/jadlog-favicon.png';
           link.type = 'image/png';
           document.title = 'Jadlog - Sua encomenda no melhor caminho.';
         } else {
-          link.href = '/favicon.svg';
+          link.href = '/favicon.png';
+          link.type = 'image/png';
         }
         document.getElementsByTagName('head')[0].appendChild(link);
       })();
