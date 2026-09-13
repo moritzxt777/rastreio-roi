@@ -502,7 +502,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return `${custom}/r/${clean}`;
     }
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://rastreio-roi.vercel.app';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://roi-rastreio.site';
     return `${origin}/r/${clean}`;
   };
 

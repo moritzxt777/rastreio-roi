@@ -21,7 +21,7 @@ export function formatWhatsAppMessage({
   templateMessage,
   customTrackingUrl,
 }: Omit<SendTrackingMessageParams, 'phone'>): string {
-  const trackingLink = customTrackingUrl || (typeof window !== 'undefined' ? window.location.origin + '/#tracking=' + trackingCode : 'https://rastreio-roi.vercel.app/#tracking=' + trackingCode);
+  const trackingLink = customTrackingUrl || (typeof window !== 'undefined' ? window.location.origin + '/#tracking=' + trackingCode : 'https://roi-rastreio.site/#tracking=' + trackingCode);
   
   return templateMessage
     .replace(/{nome}/g, customerName.split(' ')[0] || customerName)

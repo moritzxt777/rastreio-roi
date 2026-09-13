@@ -60,7 +60,7 @@ export const LandingPage: React.FC = () => {
     setLoading(true);
     try {
       if (isSupabaseConfigured()) {
-        const redirectUrl = window.location.origin ? `${window.location.origin}/dashboard` : 'https://rastreio-roi.vercel.app/dashboard';
+        const redirectUrl = window.location.origin ? `${window.location.origin}/dashboard` : 'https://roi-rastreio.site/dashboard';
         const { error: oauthError } = await supabase.auth.signInWithOAuth({
           provider: 'discord',
           options: {

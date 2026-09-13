@@ -167,11 +167,11 @@ export const IntegrationsView: React.FC = () => {
             onClick={() => {
               updateWidgetSettings({
                 ...widgetSettings,
-                customTrackingDomain: 'https://rastreio-roi.vercel.app'
+                customTrackingDomain: 'https://roi-rastreio.site'
               });
             }}
             className={`p-3.5 rounded-xl border text-left transition flex items-center justify-between ${
-              !widgetSettings.customTrackingDomain || widgetSettings.customTrackingDomain.includes('rastreio-roi')
+              !widgetSettings.customTrackingDomain || widgetSettings.customTrackingDomain.includes('roi-rastreio') || widgetSettings.customTrackingDomain.includes('rastreio-roi')
                 ? 'border-brand-500 bg-brand-500/10 text-white shadow-lg'
                 : 'border-slate-800 bg-navy-950 text-slate-300 hover:border-slate-700'
             }`}
@@ -180,9 +180,9 @@ export const IntegrationsView: React.FC = () => {
               <div className="font-bold text-xs text-white flex items-center gap-1.5">
                 <span>Portal Rastreio ROI (+Upsell)</span>
               </div>
-              <div className="text-[11px] text-slate-400 font-mono mt-0.5">https://rastreio-roi.vercel.app/r/{"{code}"}</div>
+              <div className="text-[11px] text-slate-400 font-mono mt-0.5">https://roi-rastreio.site/r/{"{code}"}</div>
             </div>
-            {(!widgetSettings.customTrackingDomain || widgetSettings.customTrackingDomain.includes('rastreio-roi')) && (
+            {(!widgetSettings.customTrackingDomain || widgetSettings.customTrackingDomain.includes('roi-rastreio') || widgetSettings.customTrackingDomain.includes('rastreio-roi')) && (
               <Check className="w-4 h-4 text-brand-400 shrink-0" />
             )}
           </button>
