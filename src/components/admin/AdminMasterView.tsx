@@ -18,6 +18,7 @@ import {
   Plus
 } from 'lucide-react';
 import { Storage } from '../../utils/storage';
+import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 export const AdminMasterView: React.FC = () => {
   const navigate = useNavigate();
@@ -46,8 +47,11 @@ export const AdminMasterView: React.FC = () => {
     }
   }, [navigate]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     localStorage.removeItem('rastreio_admin_session');
+    if (isSupabaseConfigured()) {
+      await supabase.auth.signOut();
+    }
     navigate('/admin-login');
   };
 

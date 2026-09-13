@@ -118,18 +118,18 @@ const DEFAULT_INTEGRATIONS: IntegrationConfig[] = [
     id: 'int-shopify',
     platform: 'shopify',
     name: 'Shopify Store',
-    enabled: true,
-    webhookSecret: 'shpat_98a7sd8f7a6sd5f46a5s',
-    webhookUrl: 'https://api.seudominio.com.br/v1/webhooks/shopify',
+    enabled: false,
+    webhookSecret: '',
+    webhookUrl: '',
     totalOrdersSynced: 0
   },
   {
     id: 'int-yampi',
     platform: 'yampi',
     name: 'Yampi Checkout',
-    enabled: true,
-    webhookSecret: 'ymp_sec_876123456789',
-    webhookUrl: 'https://api.seudominio.com.br/v1/webhooks/yampi',
+    enabled: false,
+    webhookSecret: '',
+    webhookUrl: '',
     totalOrdersSynced: 0
   },
   {
@@ -137,26 +137,26 @@ const DEFAULT_INTEGRATIONS: IntegrationConfig[] = [
     platform: 'cartpanda',
     name: 'CartPanda Store',
     enabled: false,
-    webhookSecret: 'cp_live_0192837465',
-    webhookUrl: 'https://api.seudominio.com.br/v1/webhooks/cartpanda',
+    webhookSecret: '',
+    webhookUrl: '',
     totalOrdersSynced: 0
   },
   {
     id: 'int-nuvemshop',
     platform: 'nuvemshop',
     name: 'Nuvemshop',
-    enabled: true,
-    webhookSecret: 'nvm_tok_654987321',
-    webhookUrl: 'https://api.seudominio.com.br/v1/webhooks/nuvemshop',
+    enabled: false,
+    webhookSecret: '',
+    webhookUrl: '',
     totalOrdersSynced: 0
   },
   {
     id: 'int-kiwify',
     platform: 'kiwify',
     name: 'Kiwify Produtos Físicos',
-    enabled: true,
-    webhookSecret: 'kwf_wh_7819234871',
-    webhookUrl: 'https://api.seudominio.com.br/v1/webhooks/kiwify',
+    enabled: false,
+    webhookSecret: '',
+    webhookUrl: '',
     totalOrdersSynced: 0
   }
 ];
