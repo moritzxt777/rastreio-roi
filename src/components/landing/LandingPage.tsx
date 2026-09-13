@@ -259,8 +259,8 @@ export const LandingPage: React.FC = () => {
         </div>
 
         {/* Hero Title */}
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.15]">
-          Quem não escala black <span className="bg-gradient-to-r from-brand-400 via-sky-300 to-blue-400 bg-clip-text text-transparent">não vive as whites</span>
+        <h1 translate="no" className="notranslate text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.15]">
+          Quem não escala black <span className="bg-gradient-to-r from-brand-400 via-sky-300 to-blue-400 bg-clip-text text-transparent notranslate" translate="no">não vive as whites</span>
         </h1>
 
         {/* Subtitle */}
