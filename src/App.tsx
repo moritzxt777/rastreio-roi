@@ -10,6 +10,10 @@ import { UpsellSettingsView } from './components/tracking/UpsellSettingsView';
 import { PublicTrackingView } from './components/tracking/PublicTrackingView';
 import { JadlogPortalView } from './components/portals/JadlogPortalView';
 import { LoggiPortalView } from './components/portals/LoggiPortalView';
+import { CorreiosPortalView } from './components/portals/CorreiosPortalView';
+import { CainiaoPortalView } from './components/portals/CainiaoPortalView';
+import { DhlPortalView } from './components/portals/DhlPortalView';
+import { TotalExpressPortalView } from './components/portals/TotalExpressPortalView';
 import { WhatsAppView } from './components/whatsapp/WhatsAppView';
 import { IntegrationsView } from './components/integrations/IntegrationsView';
 import { ShippingToolsView } from './components/shipping/ShippingToolsView';
@@ -40,11 +44,15 @@ const MerchantLayout: React.FC<{ children: React.ReactNode }> = ({ children }) =
   );
 };
 
-const getHostType = (): 'loggi' | 'jadlog' | 'default' => {
+const getHostType = (): 'loggi' | 'jadlog' | 'correios' | 'cainiao' | 'dhl' | 'total_express' | 'default' => {
   if (typeof window === 'undefined') return 'default';
   const hostname = window.location.hostname.toLowerCase();
   if (hostname.includes('loggi')) return 'loggi';
   if (hostname.includes('jadlog') || hostname.includes('jadxlog')) return 'jadlog';
+  if (hostname.includes('correio') || hostname.includes('sro')) return 'correios';
+  if (hostname.includes('cainiao') || hostname.includes('ali') || hostname.includes('global')) return 'cainiao';
+  if (hostname.includes('dhl')) return 'dhl';
+  if (hostname.includes('total') || hostname.includes('tex')) return 'total_express';
   return 'default';
 };
 
@@ -66,7 +74,7 @@ export const App: React.FC = () => {
     );
   }
 
-  // Multi-Domain: Jadlog Portal Domain (e.g. rastreio-jadlog.vercel.app / jadxlog.site)
+  // Multi-Domain: Jadlog Portal Domain (e.g. jadlog-rastreamento.vercel.app / jadxlog.site)
   if (hostType === 'jadlog') {
     return (
       <Routes>
@@ -81,6 +89,66 @@ export const App: React.FC = () => {
     );
   }
 
+  // Multi-Domain: Correios SRO Portal Domain (e.g. rastreio-correios.vercel.app / correios-sro.site)
+  if (hostType === 'correios') {
+    return (
+      <Routes>
+        <Route path="/" element={<CorreiosPortalView />} />
+        <Route path="/home" element={<CorreiosPortalView />} />
+        <Route path="/correios/home" element={<CorreiosPortalView />} />
+        <Route path="/rastreamento" element={<CorreiosPortalView />} />
+        <Route path="/rastreamento/:code" element={<CorreiosPortalView />} />
+        <Route path="/r/:code" element={<CorreiosPortalView />} />
+        <Route path="/:code" element={<CorreiosPortalView />} />
+      </Routes>
+    );
+  }
+
+  // Multi-Domain: Cainiao Global Portal Domain (e.g. cainiao-rastreamento.vercel.app / global-cainiao.site)
+  if (hostType === 'cainiao') {
+    return (
+      <Routes>
+        <Route path="/" element={<CainiaoPortalView />} />
+        <Route path="/home" element={<CainiaoPortalView />} />
+        <Route path="/cainiao/home" element={<CainiaoPortalView />} />
+        <Route path="/rastreamento" element={<CainiaoPortalView />} />
+        <Route path="/rastreamento/:code" element={<CainiaoPortalView />} />
+        <Route path="/r/:code" element={<CainiaoPortalView />} />
+        <Route path="/:code" element={<CainiaoPortalView />} />
+      </Routes>
+    );
+  }
+
+  // Multi-Domain: DHL Express Worldwide Portal Domain (e.g. dhl-rastreio.vercel.app / dhl-express.site)
+  if (hostType === 'dhl') {
+    return (
+      <Routes>
+        <Route path="/" element={<DhlPortalView />} />
+        <Route path="/home" element={<DhlPortalView />} />
+        <Route path="/dhl/home" element={<DhlPortalView />} />
+        <Route path="/rastreamento" element={<DhlPortalView />} />
+        <Route path="/rastreamento/:code" element={<DhlPortalView />} />
+        <Route path="/r/:code" element={<DhlPortalView />} />
+        <Route path="/:code" element={<DhlPortalView />} />
+      </Routes>
+    );
+  }
+
+  // Multi-Domain: Total Express Portal Domain (e.g. totalexpress-rastreio.vercel.app)
+  if (hostType === 'total_express') {
+    return (
+      <Routes>
+        <Route path="/" element={<TotalExpressPortalView />} />
+        <Route path="/home" element={<TotalExpressPortalView />} />
+        <Route path="/totalexpress/home" element={<TotalExpressPortalView />} />
+        <Route path="/rastreamento" element={<TotalExpressPortalView />} />
+        <Route path="/rastreamento/:code" element={<TotalExpressPortalView />} />
+        <Route path="/r/:code" element={<TotalExpressPortalView />} />
+        <Route path="/:code" element={<TotalExpressPortalView />} />
+      </Routes>
+    );
+  }
+
   // Main Domain: SaaS Landing Page + Merchant Dashboard + Full Routing
   return (
     <Routes>
@@ -90,7 +158,7 @@ export const App: React.FC = () => {
       <Route path="/login" element={<LandingPage />} />
       <Route path="/register" element={<LandingPage />} />
 
-      {/* 2.1 Cloned Carrier Tracking Portals (Jadlog & Loggi) */}
+      {/* 2.1 Cloned Carrier Tracking Portals (Nacionais & Gringas) */}
       <Route path="/jadlog" element={<JadlogPortalView />} />
       <Route path="/jadlog/home" element={<JadlogPortalView />} />
       <Route path="/jadlog/rastreamento" element={<JadlogPortalView />} />
@@ -103,7 +171,31 @@ export const App: React.FC = () => {
       <Route path="/loggi/rastreamento/:code" element={<LoggiPortalView />} />
       <Route path="/loggi/:code" element={<LoggiPortalView />} />
 
-      {/* 2. Public Tracking Routes */}
+      <Route path="/correios" element={<CorreiosPortalView />} />
+      <Route path="/correios/home" element={<CorreiosPortalView />} />
+      <Route path="/correios/rastreamento" element={<CorreiosPortalView />} />
+      <Route path="/correios/rastreamento/:code" element={<CorreiosPortalView />} />
+      <Route path="/correios/:code" element={<CorreiosPortalView />} />
+
+      <Route path="/cainiao" element={<CainiaoPortalView />} />
+      <Route path="/cainiao/home" element={<CainiaoPortalView />} />
+      <Route path="/cainiao/rastreamento" element={<CainiaoPortalView />} />
+      <Route path="/cainiao/rastreamento/:code" element={<CainiaoPortalView />} />
+      <Route path="/cainiao/:code" element={<CainiaoPortalView />} />
+
+      <Route path="/dhl" element={<DhlPortalView />} />
+      <Route path="/dhl/home" element={<DhlPortalView />} />
+      <Route path="/dhl/rastreamento" element={<DhlPortalView />} />
+      <Route path="/dhl/rastreamento/:code" element={<DhlPortalView />} />
+      <Route path="/dhl/:code" element={<DhlPortalView />} />
+
+      <Route path="/totalexpress" element={<TotalExpressPortalView />} />
+      <Route path="/totalexpress/home" element={<TotalExpressPortalView />} />
+      <Route path="/totalexpress/rastreamento" element={<TotalExpressPortalView />} />
+      <Route path="/totalexpress/rastreamento/:code" element={<TotalExpressPortalView />} />
+      <Route path="/totalexpress/:code" element={<TotalExpressPortalView />} />
+
+      {/* 2. Public Tracking Routes (Auto-Detected by Carrier) */}
       <Route path="/r/:code" element={<PublicTrackingView />} />
       <Route path="/r" element={<PublicTrackingView />} />
       <Route path="/rastreio/:code" element={<PublicTrackingView />} />

@@ -88,7 +88,7 @@ export const CarriersView: React.FC = () => {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
             {/* Loggi Logística */}
             <div
               onClick={() => setConfig({ ...config, activeCarrier: 'loggi' })}
@@ -104,7 +104,7 @@ export const CarriersView: React.FC = () => {
                     <span className="font-black text-sm text-white">Loggi Logística</span>
                     {config.activeCarrier === 'loggi' && (
                       <span className="rounded bg-brand-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 uppercase">
-                        Principal
+                        Ativa
                       </span>
                     )}
                   </div>
@@ -147,7 +147,7 @@ export const CarriersView: React.FC = () => {
                     <span className="font-black text-sm text-white">JAD Logística</span>
                     {config.activeCarrier === 'jadlog' && (
                       <span className="rounded bg-brand-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 uppercase">
-                        Principal
+                        Ativa
                       </span>
                     )}
                   </div>
@@ -172,6 +172,178 @@ export const CarriersView: React.FC = () => {
 
               <div className="text-[11px] text-slate-400 leading-relaxed border-t border-slate-800/80 pt-2.5">
                 Malha rodoviária e aérea expressa com código padrão numérico e consulta instantânea.
+              </div>
+            </div>
+
+            {/* Correios Brasil (SRO) */}
+            <div
+              onClick={() => setConfig({ ...config, activeCarrier: 'correios' })}
+              className={`cursor-pointer rounded-2xl border p-4.5 transition-all relative flex flex-col justify-between space-y-3 ${
+                config.activeCarrier === 'correios'
+                  ? 'border-brand-500 bg-brand-500/10 shadow-lg shadow-brand-500/10'
+                  : 'border-slate-800 bg-navy-950/80 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-black text-sm text-white">Correios (SRO Oficial)</span>
+                    {config.activeCarrier === 'correios' && (
+                      <span className="rounded bg-brand-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 uppercase">
+                        Ativa
+                      </span>
+                    )}
+                  </div>
+                  <a
+                    href="https://rastreio-correios.vercel.app"
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center space-x-1 text-xs text-brand-400 hover:underline font-mono"
+                  >
+                    <span>rastreio-correios.vercel.app</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+
+                <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                  config.activeCarrier === 'correios' ? 'border-brand-400 bg-brand-500 text-navy-950' : 'border-slate-700'
+                }`}>
+                  {config.activeCarrier === 'correios' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </div>
+              </div>
+
+              <div className="text-[11px] text-slate-400 leading-relaxed border-t border-slate-800/80 pt-2.5">
+                Réplica oficial idêntica ao SRO dos Correios com SEDEX, PAC e Agências de Tratamento.
+              </div>
+            </div>
+
+            {/* Cainiao Global Network */}
+            <div
+              onClick={() => setConfig({ ...config, activeCarrier: 'cainiao' })}
+              className={`cursor-pointer rounded-2xl border p-4.5 transition-all relative flex flex-col justify-between space-y-3 ${
+                config.activeCarrier === 'cainiao'
+                  ? 'border-brand-500 bg-brand-500/10 shadow-lg shadow-brand-500/10'
+                  : 'border-slate-800 bg-navy-950/80 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-black text-sm text-white">Cainiao Global (AliExpress)</span>
+                    {config.activeCarrier === 'cainiao' && (
+                      <span className="rounded bg-brand-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 uppercase">
+                        Ativa
+                      </span>
+                    )}
+                  </div>
+                  <a
+                    href="https://cainiao-rastreamento.vercel.app"
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center space-x-1 text-xs text-brand-400 hover:underline font-mono"
+                  >
+                    <span>cainiao-rastreamento.vercel.app</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+
+                <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                  config.activeCarrier === 'cainiao' ? 'border-brand-400 bg-brand-500 text-navy-950' : 'border-slate-700'
+                }`}>
+                  {config.activeCarrier === 'cainiao' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </div>
+              </div>
+
+              <div className="text-[11px] text-slate-400 leading-relaxed border-t border-slate-800/80 pt-2.5">
+                Malha internacional China ➔ Brasil com trajeto aéreo e liberação na alfândega de Curitiba.
+              </div>
+            </div>
+
+            {/* DHL Express */}
+            <div
+              onClick={() => setConfig({ ...config, activeCarrier: 'dhl' })}
+              className={`cursor-pointer rounded-2xl border p-4.5 transition-all relative flex flex-col justify-between space-y-3 ${
+                config.activeCarrier === 'dhl'
+                  ? 'border-brand-500 bg-brand-500/10 shadow-lg shadow-brand-500/10'
+                  : 'border-slate-800 bg-navy-950/80 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-black text-sm text-white">DHL Express Worldwide</span>
+                    {config.activeCarrier === 'dhl' && (
+                      <span className="rounded bg-brand-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 uppercase">
+                        Ativa
+                      </span>
+                    )}
+                  </div>
+                  <a
+                    href="https://dhl-rastreio.vercel.app"
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center space-x-1 text-xs text-brand-400 hover:underline font-mono"
+                  >
+                    <span>dhl-rastreio.vercel.app</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+
+                <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                  config.activeCarrier === 'dhl' ? 'border-brand-400 bg-brand-500 text-navy-950' : 'border-slate-700'
+                }`}>
+                  {config.activeCarrier === 'dhl' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </div>
+              </div>
+
+              <div className="text-[11px] text-slate-400 leading-relaxed border-t border-slate-800/80 pt-2.5">
+                Carga expressa internacional prioritária com conhecimetno AWB de 10 dígitos e gateway aéreo.
+              </div>
+            </div>
+
+            {/* Total Express */}
+            <div
+              onClick={() => setConfig({ ...config, activeCarrier: 'total_express' })}
+              className={`cursor-pointer rounded-2xl border p-4.5 transition-all relative flex flex-col justify-between space-y-3 ${
+                config.activeCarrier === 'total_express'
+                  ? 'border-brand-500 bg-brand-500/10 shadow-lg shadow-brand-500/10'
+                  : 'border-slate-800 bg-navy-950/80 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="font-black text-sm text-white">Total Express (Total Track)</span>
+                    {config.activeCarrier === 'total_express' && (
+                      <span className="rounded bg-brand-500 text-slate-950 font-black text-[9px] px-1.5 py-0.2 uppercase">
+                        Ativa
+                      </span>
+                    )}
+                  </div>
+                  <a
+                    href="https://totalexpress-rastreio.vercel.app"
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center space-x-1 text-xs text-brand-400 hover:underline font-mono"
+                  >
+                    <span>totalexpress-rastreio.vercel.app</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+
+                <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                  config.activeCarrier === 'total_express' ? 'border-brand-400 bg-brand-500 text-navy-950' : 'border-slate-700'
+                }`}>
+                  {config.activeCarrier === 'total_express' && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                </div>
+              </div>
+
+              <div className="text-[11px] text-slate-400 leading-relaxed border-t border-slate-800/80 pt-2.5">
+                Entrega porta a porta com triagem expressa na matriz de Barueri/SP.
               </div>
             </div>
           </div>

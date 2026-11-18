@@ -28,9 +28,35 @@ function generateCode(carrier: string = 'correios'): string {
     for (let i = 0; i < 10; i++) d += nums.charAt(Math.floor(Math.random() * nums.length));
     return d;
   }
+  if (carrier === 'cainiao') {
+    let d = '';
+    for (let i = 0; i < 9; i++) d += nums.charAt(Math.floor(Math.random() * nums.length));
+    return `LP${d}BR`;
+  }
+  if (carrier === 'dhl') {
+    let d = '4';
+    for (let i = 0; i < 9; i++) d += nums.charAt(Math.floor(Math.random() * nums.length));
+    return d;
+  }
+  if (carrier === 'total_express') {
+    let d = '';
+    for (let i = 0; i < 9; i++) d += nums.charAt(Math.floor(Math.random() * nums.length));
+    return `TEX${d}`;
+  }
   let d = '';
   for (let i = 0; i < 9; i++) d += nums.charAt(Math.floor(Math.random() * nums.length));
   return `NL${d}BR`;
+}
+
+function getCarrierTrackingUrl(host: string, carrier: string, code: string): string {
+  const upper = (code || '').toUpperCase();
+  const c = (carrier || '').toLowerCase();
+  if (c === 'cainiao' || upper.startsWith('LP') || upper.startsWith('CN')) return `${host}/cainiao/rastreamento/${code}`;
+  if (c === 'dhl' || /^\d{10}$/.test(upper)) return `${host}/dhl/rastreamento/${code}`;
+  if (c === 'jadlog' || upper.startsWith('1008') || upper.startsWith('JAD')) return `${host}/jadlog/rastreamento/${code}`;
+  if (c === 'total_express' || upper.startsWith('TEX')) return `${host}/totalexpress/rastreamento/${code}`;
+  if (c === 'correios' || (upper.length === 13 && upper.endsWith('BR') && !upper.startsWith('LG'))) return `${host}/correios/rastreamento/${code}`;
+  return `${host}/loggi/rastreamento/${code}`;
 }
 
 function getStatusLabel(status: string) {
@@ -55,7 +81,107 @@ function generateEvents(carrier: string, originCity: string, originState: string
     };
   };
 
-  const cName = carrier === 'loggi' ? 'Loggi Express' : carrier === 'jadlog' ? 'Jadlog' : 'Correios';
+  if (carrier === 'cainiao') {
+    const cai = [
+      {
+        id: 'cai-1',
+        status: 'posted',
+        title: 'Recebido pelo operador logístico internacional',
+        description: 'Pacote recebido no Centro de Triagem Internacional de Shenzhen (China).',
+        location: 'Shenzhen - China',
+        ...fmt(6, 2)
+      },
+      {
+        id: 'cai-2',
+        status: 'in_transit',
+        title: 'Partida em voo internacional para o país de destino',
+        description: 'Voo comercial de carga decolou com destino ao Aeroporto Internacional de Curitiba/PR.',
+        location: 'Aeroporto Internacional de Shenzhen',
+        ...fmt(4, 5)
+      },
+      {
+        id: 'cai-3',
+        status: 'in_transit',
+        title: 'Chegada ao Brasil - Desembaraço aduaneiro concluído',
+        description: 'Importação autorizada pelos órgãos aduaneiros (Receita Federal) sem pendências ou taxas.',
+        location: 'Curitiba - PR',
+        ...fmt(2, 4)
+      },
+      {
+        id: 'cai-4',
+        status: 'out_for_delivery',
+        title: 'Objeto saiu para entrega ao destinatário',
+        description: 'O entregador local da malha parceira está a caminho do seu endereço.',
+        location: `${destCity} - ${destState}`,
+        ...fmt(0, 2)
+      },
+      {
+        id: 'cai-5',
+        status: 'delivered',
+        title: 'Pacote internacional entregue com sucesso',
+        description: 'Entrega finalizada com sucesso no endereço cadastrado.',
+        location: `${destCity} - ${destState}`,
+        ...fmt(0, 5)
+      }
+    ];
+    if (status === 'posted') return cai.slice(0, 1);
+    if (status === 'in_transit') return cai.slice(0, 3);
+    if (status === 'out_for_delivery') return cai.slice(0, 4);
+    if (status === 'delivered') return cai.slice(0, 5);
+    return cai.slice(0, 3);
+  }
+
+  if (carrier === 'dhl') {
+    const dhl = [
+      {
+        id: 'dhl-1',
+        status: 'posted',
+        title: 'Remessa coletada pela DHL Express',
+        description: 'Envio recebido na central de operações expressas.',
+        location: `${originCity} - ${originState}`,
+        ...fmt(4, 1)
+      },
+      {
+        id: 'dhl-2',
+        status: 'in_transit',
+        title: 'Processado no Hub Aéreo DHL Express',
+        description: 'Carga aérea consolidada e em rota de transferência prioritária.',
+        location: 'Hub Gateway Viracopos - SP',
+        ...fmt(2, 6)
+      },
+      {
+        id: 'dhl-3',
+        status: 'in_transit',
+        title: 'Chegada à estação de entrega local',
+        description: `Remessa expressa disponível na filial DHL de ${destCity}/${destState}.`,
+        location: `${destCity} - ${destState}`,
+        ...fmt(1, 3)
+      },
+      {
+        id: 'dhl-4',
+        status: 'out_for_delivery',
+        title: 'Com o courier DHL para entrega',
+        description: 'Motorista em rota final de entrega ao destinatário.',
+        location: `${destCity} - ${destState}`,
+        ...fmt(0, 1)
+      },
+      {
+        id: 'dhl-5',
+        status: 'delivered',
+        title: 'Remessa entregue e assinada',
+        description: 'Entrega finalizada com comprovante digitalizado.',
+        location: `${destCity} - ${destState}`,
+        ...fmt(0, 4)
+      }
+    ];
+    if (status === 'posted') return dhl.slice(0, 1);
+    if (status === 'in_transit') return dhl.slice(0, 3);
+    if (status === 'out_for_delivery') return dhl.slice(0, 4);
+    if (status === 'delivered') return dhl.slice(0, 5);
+    return dhl.slice(0, 3);
+  }
+
+  const cName = carrier === 'loggi' ? 'Loggi Express' : carrier === 'jadlog' ? 'Jadlog' : carrier === 'total_express' ? 'Total Express' : 'Correios';
 
   const all = [
     {
@@ -171,9 +297,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             status: item.status,
             statusLabel: getStatusLabel(item.status),
             estimatedDeliveryDate: item.estimatedDeliveryDate,
-            trackingUrl: item.carrier === 'jadlog' || (item.code && (item.code.startsWith('1008') || item.code.startsWith('JAD') || /^\d{9,}$/.test(item.code)))
-              ? `${host}/jadlog/rastreamento/${item.code}`
-              : `${host}/loggi/rastreamento/${item.code}`,
+            trackingUrl: getCarrierTrackingUrl(host, item.carrier, item.code),
             eventsCount: item.events?.length || 0,
             latestEvent: item.events?.[0] || null,
             events: item.events || []
@@ -189,9 +313,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // 3. Fallback inteligente se o código tiver formato de rastreio válido
     if (clean.length >= 4) {
-      let carrier = 'correios';
-      if (clean.startsWith('LG')) carrier = 'loggi';
-      else if (clean.startsWith('1008')) carrier = 'jadlog';
+      let carrier = 'loggi';
+      if (clean.startsWith('LP') || clean.startsWith('CN')) carrier = 'cainiao';
+      else if (/^\d{10}$/.test(clean)) carrier = 'dhl';
+      else if (clean.startsWith('1008') || clean.startsWith('JAD') || /^\d{12,14}$/.test(clean)) carrier = 'jadlog';
+      else if (clean.startsWith('TEX')) carrier = 'total_express';
+      else if (clean.endsWith('BR') && !clean.startsWith('LG')) carrier = 'correios';
 
       const events = generateEvents(carrier, 'Cajamar', 'SP', 'São Paulo', 'SP', 'in_transit');
       const dynamic = {
@@ -209,9 +336,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: 'in_transit',
         statusLabel: getStatusLabel('in_transit'),
         estimatedDeliveryDate: new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0],
-        trackingUrl: carrier === 'jadlog'
-          ? `${host}/jadlog/rastreamento/${clean}`
-          : `${host}/loggi/rastreamento/${clean}`,
+        trackingUrl: getCarrierTrackingUrl(host, carrier, clean),
         eventsCount: events.length,
         latestEvent: events[0] || null,
         events
@@ -232,7 +357,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
     try {
       const body = req.body || {};
-      const carrier = (body.carrier || '').toLowerCase() === 'jadlog' ? 'jadlog' : 'loggi';
+      const rawCarrier = (body.carrier || '').toLowerCase();
+      let carrier = 'loggi';
+      if (rawCarrier.includes('cai')) carrier = 'cainiao';
+      else if (rawCarrier.includes('dhl')) carrier = 'dhl';
+      else if (rawCarrier.includes('jad')) carrier = 'jadlog';
+      else if (rawCarrier.includes('total') || rawCarrier.includes('tex')) carrier = 'total_express';
+      else if (rawCarrier.includes('correio')) carrier = 'correios';
+
       const code = (body.code || generateCode(carrier)).trim().toUpperCase().replace(/\s+/g, '');
       const customerName = body.customerName || body.name || 'Cliente';
       const customerPhone = body.customerPhone || body.phone || '';
@@ -253,9 +385,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ? body.events
         : generateEvents(carrier, originCity, originState, destCity, destState, status);
 
-      const trackingUrl = carrier === 'jadlog' 
-        ? `${host}/jadlog/rastreamento/${code}`
-        : `${host}/loggi/rastreamento/${code}`;
+      const trackingUrl = getCarrierTrackingUrl(host, carrier, code);
 
       const shipmentRecord = {
         code,

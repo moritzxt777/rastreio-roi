@@ -60,9 +60,18 @@ export function formatWhatsAppMessage({
   const cleanCode = encodeURIComponent((trackingCode || '').trim().toUpperCase().replace(/\s+/g, ''));
   const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://roi-rastreio.site';
   
+  const upper = (trackingCode || '').toUpperCase().trim();
   let defaultLink = `${origin}/loggi/rastreamento/${cleanCode}`;
-  if (trackingCode.toUpperCase().startsWith('1008') || trackingCode.toUpperCase().startsWith('JAD') || /^\d{9,}$/.test(cleanCode)) {
+  if (upper.startsWith('LP') || upper.startsWith('CN') || upper.includes('CAI')) {
+    defaultLink = `${origin}/cainiao/rastreamento/${cleanCode}`;
+  } else if (/^\d{10}$/.test(upper) || upper.startsWith('DHL')) {
+    defaultLink = `${origin}/dhl/rastreamento/${cleanCode}`;
+  } else if (upper.startsWith('1008') || upper.startsWith('JAD') || /^\d{12,14}$/.test(upper)) {
     defaultLink = `${origin}/jadlog/rastreamento/${cleanCode}`;
+  } else if (upper.startsWith('TEX') || upper.startsWith('TOTAL')) {
+    defaultLink = `${origin}/totalexpress/rastreamento/${cleanCode}`;
+  } else if ((upper.length === 13 && upper.endsWith('BR') && !upper.startsWith('LG')) || upper.startsWith('CORREIO')) {
+    defaultLink = `${origin}/correios/rastreamento/${cleanCode}`;
   }
   const trackingLink = customTrackingUrl || defaultLink;
 

@@ -1,4 +1,4 @@
-export type CarrierType = 'correios' | 'loggi' | 'jadlog' | 'total_express' | 'kangu' | 'cainiao';
+export type CarrierType = 'correios' | 'loggi' | 'jadlog' | 'total_express' | 'kangu' | 'cainiao' | 'dhl';
 
 export type TrackingStatus = 
   | 'posted'              // Objeto Postado
@@ -145,7 +145,7 @@ export interface WidgetSettings {
 }
 
 export interface CarrierOperationalConfig {
-  activeCarrier: 'loggi' | 'jadlog';
+  activeCarrier: 'loggi' | 'jadlog' | 'correios' | 'cainiao' | 'dhl' | 'total_express';
   originCity: string;
   originState: string;
   deliveryDays: number;

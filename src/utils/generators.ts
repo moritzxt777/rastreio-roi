@@ -40,7 +40,23 @@ export function generateTrackingCode(carrier: CarrierType): string {
     return digits;
   }
 
-  // Generic/Kangu/Cainiao
+  if (carrier === 'cainiao') {
+    let digits = '';
+    for (let i = 0; i < 9; i++) {
+      digits += nums.charAt(Math.floor(Math.random() * nums.length));
+    }
+    return `LP${digits}BR`;
+  }
+
+  if (carrier === 'dhl') {
+    let digits = '4';
+    for (let i = 0; i < 9; i++) {
+      digits += nums.charAt(Math.floor(Math.random() * nums.length));
+    }
+    return digits;
+  }
+
+  // Generic/Kangu
   let randStr = '';
   for (let i = 0; i < 12; i++) {
     randStr += nums.charAt(Math.floor(Math.random() * nums.length));
@@ -66,7 +82,109 @@ export function generateRealisticTimeline(
     };
   };
 
-  const carrierName = carrier === 'correios' ? 'Correios' : carrier === 'loggi' ? 'Loggi Express' : carrier === 'jadlog' ? 'Jadlog' : 'Transportadora';
+  if (carrier === 'cainiao') {
+    const cainiaoEvents: TrackingEvent[] = [
+      {
+        id: 'cai-1',
+        status: 'posted',
+        title: 'Recebido pelo operador logístico internacional',
+        description: 'Pacote recebido no Centro de Triagem Internacional de Shenzhen (China).',
+        location: 'Shenzhen - China',
+        ...formatDate(6, 2)
+      },
+      {
+        id: 'cai-2',
+        status: 'in_transit',
+        title: 'Partida em voo internacional para o país de destino',
+        description: 'Voo comercial de carga decolou com destino ao Aeroporto Internacional de Curitiba/PR.',
+        location: 'Aeroporto Internacional de Shenzhen',
+        ...formatDate(4, 5)
+      },
+      {
+        id: 'cai-3',
+        status: 'in_transit',
+        title: 'Chegada ao Brasil - Desembaraço aduaneiro concluído',
+        description: 'Importação autorizada pelos órgãos aduaneiros (Receita Federal) sem pendências ou taxas.',
+        location: 'Curitiba - PR',
+        ...formatDate(2, 4)
+      },
+      {
+        id: 'cai-4',
+        status: 'out_for_delivery',
+        title: 'Objeto saiu para entrega ao destinatário',
+        description: 'O entregador local da malha parceira está a caminho do seu endereço.',
+        location: `${destCity} - ${destState}`,
+        ...formatDate(0, 2)
+      },
+      {
+        id: 'cai-5',
+        status: 'delivered',
+        title: 'Pacote internacional entregue com sucesso',
+        description: 'Entrega finalizada com sucesso no endereço cadastrado.',
+        location: `${destCity} - ${destState}`,
+        ...formatDate(0, 5)
+      }
+    ];
+
+    if (currentStatus === 'posted') return cainiaoEvents.slice(0, 1);
+    if (currentStatus === 'in_transit') return cainiaoEvents.slice(0, 3);
+    if (currentStatus === 'out_for_delivery') return cainiaoEvents.slice(0, 4);
+    if (currentStatus === 'delivered') return cainiaoEvents.slice(0, 5);
+    return cainiaoEvents.slice(0, 3);
+  }
+
+  if (carrier === 'dhl') {
+    const dhlEvents: TrackingEvent[] = [
+      {
+        id: 'dhl-1',
+        status: 'posted',
+        title: 'Remessa coletada pela DHL Express',
+        description: 'Envio recebido na central de operações expressas.',
+        location: `${originCity} - ${originState}`,
+        ...formatDate(4, 1)
+      },
+      {
+        id: 'dhl-2',
+        status: 'in_transit',
+        title: 'Processado no Hub Aéreo DHL Express',
+        description: 'Carga aérea consolidada e em rota de transferência prioritária.',
+        location: 'Hub Gateway Viracopos - SP',
+        ...formatDate(2, 6)
+      },
+      {
+        id: 'dhl-3',
+        status: 'in_transit',
+        title: 'Chegada à estação de entrega local',
+        description: `Remessa expressa disponível na filial DHL de ${destCity}/${destState}.`,
+        location: `${destCity} - ${destState}`,
+        ...formatDate(1, 3)
+      },
+      {
+        id: 'dhl-4',
+        status: 'out_for_delivery',
+        title: 'Com o courier DHL para entrega',
+        description: 'Motorista em rota final de entrega ao destinatário.',
+        location: `${destCity} - ${destState}`,
+        ...formatDate(0, 1)
+      },
+      {
+        id: 'dhl-5',
+        status: 'delivered',
+        title: 'Remessa entregue e assinada',
+        description: 'Entrega finalizada com comprovante digitalizado.',
+        location: `${destCity} - ${destState}`,
+        ...formatDate(0, 4)
+      }
+    ];
+
+    if (currentStatus === 'posted') return dhlEvents.slice(0, 1);
+    if (currentStatus === 'in_transit') return dhlEvents.slice(0, 3);
+    if (currentStatus === 'out_for_delivery') return dhlEvents.slice(0, 4);
+    if (currentStatus === 'delivered') return dhlEvents.slice(0, 5);
+    return dhlEvents.slice(0, 3);
+  }
+
+  const carrierName = carrier === 'correios' ? 'Correios' : carrier === 'loggi' ? 'Loggi Express' : carrier === 'jadlog' ? 'Jadlog' : carrier === 'total_express' ? 'Total Express' : 'Transportadora';
 
   const allEvents: TrackingEvent[] = [
     {
@@ -150,7 +268,11 @@ export function getStatusDetails(status: TrackingStatus) {
 
 export function detectCarrierFromCode(code: string): CarrierType {
   const clean = (code || '').trim().toUpperCase().replace(/\s+/g, '');
-  if (clean.startsWith('1008') || clean.startsWith('JAD') || /^\d{9,}$/.test(clean)) return 'jadlog';
+  if (clean.startsWith('LP') || clean.startsWith('CN') || clean.includes('CAI')) return 'cainiao';
+  if (/^\d{10}$/.test(clean) || clean.startsWith('DHL')) return 'dhl';
+  if (clean.startsWith('1008') || clean.startsWith('JAD') || /^\d{12,14}$/.test(clean)) return 'jadlog';
+  if (clean.startsWith('TEX') || clean.startsWith('TOTAL')) return 'total_express';
+  if ((clean.length === 13 && clean.endsWith('BR') && !clean.startsWith('LG')) || clean.startsWith('CORREIO')) return 'correios';
   return 'loggi';
 }
 

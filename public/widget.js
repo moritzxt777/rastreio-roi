@@ -60,8 +60,16 @@
         var cleanDomain = domain.replace(/\/+$/, '');
         var targetUrl = cleanDomain + '/loggi/rastreamento/' + encodeURIComponent(code);
 
-        if (code.indexOf('1008') === 0 || code.indexOf('JAD') === 0 || /^\d{9,}$/.test(code)) {
+        if (code.indexOf('LP') === 0 || code.indexOf('CN') === 0) {
+          targetUrl = cleanDomain + '/cainiao/rastreamento/' + encodeURIComponent(code);
+        } else if (/^\d{10}$/.test(code) || code.indexOf('DHL') === 0) {
+          targetUrl = cleanDomain + '/dhl/rastreamento/' + encodeURIComponent(code);
+        } else if (code.indexOf('1008') === 0 || code.indexOf('JAD') === 0 || /^\d{12,14}$/.test(code)) {
           targetUrl = cleanDomain + '/jadlog/rastreamento/' + encodeURIComponent(code);
+        } else if (code.indexOf('TEX') === 0 || code.indexOf('TOTAL') === 0) {
+          targetUrl = cleanDomain + '/totalexpress/rastreamento/' + encodeURIComponent(code);
+        } else if ((code.length === 13 && code.slice(-2) === 'BR' && code.indexOf('LG') !== 0) || code.indexOf('CORREIO') === 0) {
+          targetUrl = cleanDomain + '/correios/rastreamento/' + encodeURIComponent(code);
         }
         
         window.open(targetUrl, '_blank');

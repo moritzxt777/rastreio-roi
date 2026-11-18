@@ -216,10 +216,14 @@ Beatriz Rocha Martins;51998765432;Fone Sem Fio Pro;99.90;Porto Alegre;RS`;
             {/* Carrier selector */}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">Transportadora / Formato do Código</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 {[
                   { id: 'loggi', name: 'Loggi Logística (Principal)', desc: 'LG...BR • rastreio-loggi.vercel.app' },
                   { id: 'jadlog', name: 'JAD Logística', desc: '1008... • jadlog-rastreamento.vercel.app' },
+                  { id: 'correios', name: 'Correios (SRO Oficial)', desc: 'NL...BR • rastreio-correios.vercel.app' },
+                  { id: 'cainiao', name: 'Cainiao Global (AliExpress)', desc: 'LP...BR • cainiao-rastreamento.vercel.app' },
+                  { id: 'dhl', name: 'DHL Express Worldwide', desc: '10 Dígitos • dhl-rastreio.vercel.app' },
+                  { id: 'total_express', name: 'Total Express', desc: 'TEX... • totalexpress-rastreio.vercel.app' },
                 ].map((c) => (
                   <button
                     key={c.id}
@@ -232,10 +236,10 @@ Beatriz Rocha Martins;51998765432;Fone Sem Fio Pro;99.90;Porto Alegre;RS`;
                     }`}
                   >
                     <div className="font-bold text-slate-100 flex items-center justify-between">
-                      <span>{c.name}</span>
-                      {carrier === c.id && <span className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />}
+                      <span className="truncate">{c.name}</span>
+                      {carrier === c.id && <span className="w-2 h-2 rounded-full bg-brand-400 shrink-0 animate-pulse ml-1" />}
                     </div>
-                    <div className="text-[11px] text-slate-400 font-mono mt-1">{c.desc}</div>
+                    <div className="text-[10px] text-slate-400 font-mono mt-1 truncate">{c.desc}</div>
                   </button>
                 ))}
               </div>

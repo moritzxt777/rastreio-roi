@@ -548,8 +548,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return `${custom}/r/${clean}`;
     }
 
-    if (code.toUpperCase().startsWith('1008') || code.toUpperCase().startsWith('JAD') || /^\d{9,}$/.test(clean)) {
+    const upper = (code || '').trim().toUpperCase();
+    if (upper.startsWith('LP') || upper.startsWith('CN') || upper.includes('CAI')) {
+      return `${origin}/cainiao/rastreamento/${clean}`;
+    }
+    if (/^\d{10}$/.test(upper) || upper.startsWith('DHL')) {
+      return `${origin}/dhl/rastreamento/${clean}`;
+    }
+    if (upper.startsWith('1008') || upper.startsWith('JAD') || /^\d{12,14}$/.test(upper)) {
       return `${origin}/jadlog/rastreamento/${clean}`;
+    }
+    if (upper.startsWith('TEX') || upper.startsWith('TOTAL')) {
+      return `${origin}/totalexpress/rastreamento/${clean}`;
+    }
+    if ((upper.length === 13 && upper.endsWith('BR') && !upper.startsWith('LG')) || upper.startsWith('CORREIO')) {
+      return `${origin}/correios/rastreamento/${clean}`;
     }
 
     return `${origin}/loggi/rastreamento/${clean}`;
