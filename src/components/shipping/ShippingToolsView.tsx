@@ -43,10 +43,10 @@ export const ShippingToolsView: React.FC = () => {
   const { shipments } = useApp();
   const [selectedShipmentId, setSelectedShipmentId] = useState(shipments[0]?.id || 'sample');
   const [activeTab, setActiveTab] = useState<'label' | 'nfe'>('label');
-  const [overrideCarrier, setOverrideCarrier] = useState<'Correios' | 'Loggi' | 'Jadlog' | null>(null);
+  const [overrideCarrier, setOverrideCarrier] = useState<'Loggi' | 'Jadlog' | null>(null);
 
   const selected: Shipment = shipments.find(s => s.id === selectedShipmentId) || shipments[0] || sampleFallbackShipment;
-  const carrierName = overrideCarrier || selected.carrier || 'Correios';
+  const carrierName = overrideCarrier || (selected.carrier === 'jadlog' ? 'Jadlog' : 'Loggi');
 
   const handlePrint = () => {
     window.print();
@@ -123,7 +123,7 @@ export const ShippingToolsView: React.FC = () => {
           {/* Carrier Style Override */}
           <div className="flex items-center space-x-1.5 bg-slate-950/60 border border-slate-800 rounded-xl p-1 text-xs">
             <span className="text-[11px] text-slate-400 font-semibold px-2">Padrão:</span>
-            {(['Correios', 'Loggi', 'Jadlog'] as const).map(c => (
+            {(['Loggi', 'Jadlog'] as const).map(c => (
               <button
                 key={c}
                 type="button"

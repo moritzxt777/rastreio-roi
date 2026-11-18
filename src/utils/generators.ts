@@ -147,3 +147,41 @@ export function getStatusDetails(status: TrackingStatus) {
       return { label: 'Pendente', color: 'bg-slate-500/10 text-slate-400 border-slate-500/30', step: 0 };
   }
 }
+
+export function detectCarrierFromCode(code: string): CarrierType {
+  const clean = (code || '').trim().toUpperCase().replace(/\s+/g, '');
+  if (clean.startsWith('1008') || clean.startsWith('JAD') || /^\d{9,}$/.test(clean)) return 'jadlog';
+  return 'loggi';
+}
+
+export function generateDynamicShipment(code: string): import('../types').Shipment {
+  const clean = (code || '').trim().toUpperCase().replace(/\s+/g, '');
+  const carrier = detectCarrierFromCode(clean);
+  const events = generateRealisticTimeline(carrier, 'Cajamar', 'SP', 'São Paulo', 'SP', 'in_transit');
+  
+  return {
+    id: `dyn_${clean}_${Date.now()}`,
+    code: clean,
+    carrier,
+    customerName: 'Destinatário',
+    customerPhone: '',
+    orderNumber: clean.startsWith('ORD-') || clean.startsWith('BATCH-') ? clean : `#${clean.slice(-6) || '1042'}`,
+    orderValue: 149.90,
+    productName: 'Pacote Express Nacional',
+    originCity: 'Cajamar',
+    originState: 'SP',
+    destinationCity: 'São Paulo',
+    destinationState: 'SP',
+    destinationZip: '01000-000',
+    status: 'in_transit',
+    events,
+    estimatedDeliveryDate: new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    whatsappNotified: false,
+    emailNotified: false,
+    upsellClicks: 0,
+    upsellConversions: 0
+  };
+}
+

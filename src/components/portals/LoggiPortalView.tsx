@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useApp } from '../../context/AppContext';
-import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { lookupShipment } from '../../services/shipmentLookup.service';
 import { Shipment, TrackingEvent } from '../../types';
 import { 
   Search, 
@@ -38,9 +38,10 @@ export const LoggiPortalView: React.FC = () => {
     document.getElementsByTagName('head')[0].appendChild(link);
   }, []);
 
-  const cleanCode = (code || '').trim().toUpperCase();
+  const cleanCode = (code || '').trim().toUpperCase().replace(/\s+/g, '');
 
   useEffect(() => {
+    let isMounted = true;
     if (!cleanCode) {
       setShipment(null);
       setSearched(false);
@@ -50,44 +51,34 @@ export const LoggiPortalView: React.FC = () => {
     setSearched(true);
     setLoading(true);
 
-    // 1. Check local shipments
-    const local = shipments.find(
-      (s) => s.code.toUpperCase() === cleanCode || s.orderNumber.toUpperCase() === cleanCode
-    );
-
-    if (local) {
-      setShipment(local);
-      setLoading(false);
-      return;
-    }
-
-    // 2. Query Supabase RPC
-    if (isSupabaseConfigured()) {
-      const fetchRemote = async () => {
-        try {
-          const { data, error } = await supabase.rpc('get_shipment_by_code', { p_code: cleanCode });
-          if (data && !error) {
-            setShipment(data as Shipment);
-          } else {
-            setShipment(null);
-          }
-        } catch {
-          setShipment(null);
-        } finally {
+    lookupShipment(cleanCode, shipments)
+      .then((data) => {
+        if (isMounted) {
+          setShipment(data);
           setLoading(false);
         }
-      };
-      fetchRemote();
-    } else {
-      setShipment(null);
-      setLoading(false);
-    }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setShipment(null);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [cleanCode, shipments]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (inputCode.trim()) {
-      navigate(`/rastreamento/${inputCode.trim().toUpperCase()}`);
+    const query = inputCode.trim().toUpperCase().replace(/\s+/g, '');
+    if (query) {
+      if (window.location.pathname.startsWith('/loggi')) {
+        navigate(`/loggi/rastreamento/${query}`);
+      } else {
+        navigate(`/rastreamento/${query}`);
+      }
     }
   };
 
@@ -103,7 +94,7 @@ export const LoggiPortalView: React.FC = () => {
       {/* LOGGI HEADER */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/loggi" className="flex items-center space-x-2">
             {/* Official Loggi Logo SVG */}
             <svg className="text-[#0060FE] h-7 w-auto" viewBox="0 0 131 44" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M53.4682 7.84668H48.7231V32.8368H63.8091V28.2512H53.4682V7.84668Z" fill="currentColor" />
@@ -118,7 +109,7 @@ export const LoggiPortalView: React.FC = () => {
           </Link>
 
           <nav className="hidden md:flex items-center space-x-6 text-xs font-semibold text-gray-600">
-            <Link to="/" className="text-[#0060FE] font-bold">Rastrear Pacote</Link>
+            <Link to="/loggi" className="text-[#0060FE] font-bold">Rastrear Pacote</Link>
             <a href="https://www.loggi.com/para-voce" target="_blank" rel="noreferrer" className="hover:text-gray-900 transition">Para Você</a>
             <a href="https://www.loggi.com/para-empresas" target="_blank" rel="noreferrer" className="hover:text-gray-900 transition">Para Empresas</a>
             <a href="https://ajuda.loggi.com" target="_blank" rel="noreferrer" className="hover:text-gray-900 transition">Central de Ajuda</a>

@@ -12,9 +12,18 @@ import {
   QrCode,
   ShieldCheck,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Settings,
+  Save,
+  ExternalLink
 } from 'lucide-react';
-import { sendWhatsAppTrackingNotification } from '../../services/whatsapp.service';
+import { 
+  sendWhatsAppTrackingNotification, 
+  getWhatsAppConfig, 
+  saveWhatsAppConfig, 
+  WhatsAppConfig,
+  buildDirectWhatsAppUrl 
+} from '../../services/whatsapp.service';
 
 export const WhatsAppView: React.FC = () => {
   const { whatsappTemplates, updateWhatsAppTemplates, whatsappLogs, shipments, getTrackingUrl } = useApp();
@@ -25,7 +34,19 @@ export const WhatsAppView: React.FC = () => {
   const [testSent, setTestSent] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [testError, setTestError] = useState<string | null>(null);
-  const [qrConnected, setQrConnected] = useState(true);
+  const [directUrlGenerated, setDirectUrlGenerated] = useState<string | null>(null);
+
+  // Gateway Config state
+  const [gatewayConfig, setGatewayConfig] = useState<WhatsAppConfig>(getWhatsAppConfig());
+  const [showConfig, setShowConfig] = useState(false);
+  const [configSaved, setConfigSaved] = useState(false);
+
+  const handleSaveGateway = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveWhatsAppConfig(gatewayConfig);
+    setConfigSaved(true);
+    setTimeout(() => setConfigSaved(false), 3000);
+  };
 
   const handleToggleTemplate = (id: string) => {
     const updated = templates.map(t => t.id === id ? { ...t, enabled: !t.enabled } : t);
@@ -62,9 +83,10 @@ export const WhatsAppView: React.FC = () => {
     setIsSendingTest(true);
     setTestError(null);
     setTestSent(false);
+    setDirectUrlGenerated(null);
 
     try {
-      await sendWhatsAppTrackingNotification({
+      const res = await sendWhatsAppTrackingNotification({
         phone: testPhone,
         customerName: sampleShipment.customerName,
         orderNumber: sampleShipment.orderNumber,
@@ -73,8 +95,14 @@ export const WhatsAppView: React.FC = () => {
         templateMessage: selectedTemplate.message,
         customTrackingUrl: trackingLinkPreview,
       });
+
+      if (res.mode === 'direct_link' && res.directUrl) {
+        setDirectUrlGenerated(res.directUrl);
+        window.open(res.directUrl, '_blank');
+      }
+
       setTestSent(true);
-      setTimeout(() => setTestSent(false), 4000);
+      setTimeout(() => setTestSent(false), 5000);
     } catch (err: any) {
       setTestError(err?.message || 'Erro ao enviar notificação pelo WhatsApp');
       setTimeout(() => setTestError(null), 6000);
@@ -82,6 +110,8 @@ export const WhatsAppView: React.FC = () => {
       setIsSendingTest(false);
     }
   };
+
+  const isApiActive = gatewayConfig.apiUrl && gatewayConfig.apiKey;
 
   return (
     <div className="space-y-6">
@@ -97,11 +127,92 @@ export const WhatsAppView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3.5 py-1.5 text-xs text-emerald-400 font-semibold">
-          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>Instância Evolution API Conectada</span>
+        <div className="flex items-center space-x-2">
+          <button
+            type="button"
+            onClick={() => setShowConfig(!showConfig)}
+            className="flex items-center space-x-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:border-slate-600 transition"
+          >
+            <Settings className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Configurar Gateway API</span>
+          </button>
+
+          <div className={`flex items-center space-x-2 border rounded-xl px-3.5 py-1.5 text-xs font-semibold ${
+            isApiActive 
+              ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+              : 'bg-amber-500/10 border-amber-500/20 text-amber-300'
+          }`}>
+            <div className={`w-2.5 h-2.5 rounded-full ${isApiActive ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+            <span>{isApiActive ? 'API Conectada' : 'Modo Web wa.me (Sem API)'}</span>
+          </div>
         </div>
       </div>
+
+      {/* Gateway API Settings Drawer/Form */}
+      {showConfig && (
+        <form onSubmit={handleSaveGateway} className="rounded-2xl border border-emerald-500/30 bg-navy-900/90 p-5 space-y-4 shadow-xl">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center space-x-2">
+              <Settings className="w-4 h-4 text-emerald-400" />
+              <h2 className="text-sm font-bold text-white">Configuração do Gateway de Envio (Evolution API / Z-API)</h2>
+            </div>
+            {configSaved && (
+              <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Salvo com sucesso!
+              </span>
+            )}
+          </div>
+
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Se você possui uma instância da <strong>Evolution API</strong> ou <strong>Z-API</strong>, preencha abaixo para disparar mensagens em segundo plano 100% automático. Caso não preencha, o sistema opera no <strong>Modo Link Direto</strong> (abrindo o WhatsApp Web ou aplicativo com a mensagem pronta para enviar com 1 clique).
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-300 mb-1">URL da API (Endpoint)</label>
+              <input
+                type="text"
+                placeholder="https://api.seuzap.com"
+                value={gatewayConfig.apiUrl}
+                onChange={(e) => setGatewayConfig({ ...gatewayConfig, apiUrl: e.target.value })}
+                className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white font-mono placeholder:text-slate-600 focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-300 mb-1">Nome da Instância</label>
+              <input
+                type="text"
+                placeholder="main"
+                value={gatewayConfig.instanceName}
+                onChange={(e) => setGatewayConfig({ ...gatewayConfig, instanceName: e.target.value })}
+                className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white font-mono placeholder:text-slate-600 focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-300 mb-1">API Key / Token de Acesso</label>
+              <input
+                type="password"
+                placeholder="sua-chave-secreta"
+                value={gatewayConfig.apiKey}
+                onChange={(e) => setGatewayConfig({ ...gatewayConfig, apiKey: e.target.value })}
+                className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white font-mono placeholder:text-slate-600 focus:border-emerald-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-1">
+            <button
+              type="submit"
+              className="flex items-center space-x-1.5 rounded-xl bg-emerald-500 px-5 py-2 text-xs font-bold text-slate-950 hover:bg-emerald-400 transition shadow"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>Salvar Configuração do WhatsApp</span>
+            </button>
+          </div>
+        </form>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Templates & Triggers */}

@@ -17,20 +17,20 @@ import {
 } from 'lucide-react';
 
 export const TrackingGeneratorView: React.FC<{ onNavigate: (view: string) => void }> = ({ onNavigate }) => {
-  const { createSingleShipment, createBatchShipments, dailyQuota, openPublicTracking, getTrackingUrl } = useApp();
+  const { createSingleShipment, createBatchShipments, dailyQuota, openPublicTracking, getTrackingUrl, carrierConfig } = useApp();
 
   const [tab, setTab] = useState<'single' | 'batch'>('single');
   
   // Single form state
-  const [carrier, setCarrier] = useState<CarrierType>('correios');
+  const [carrier, setCarrier] = useState<CarrierType>(carrierConfig?.activeCarrier || 'loggi');
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [orderNumber, setOrderNumber] = useState(`ORD-${Math.floor(1000 + Math.random() * 9000)}`);
   const [productName, setProductName] = useState('');
   const [orderValue, setOrderValue] = useState('149.90');
-  const [originCity, setOriginCity] = useState('Cajamar');
-  const [originState, setOriginState] = useState('SP');
+  const [originCity, setOriginCity] = useState(carrierConfig?.originCity || 'Cajamar');
+  const [originState, setOriginState] = useState(carrierConfig?.originState || 'SP');
   const [destCity, setDestCity] = useState('');
   const [destState, setDestState] = useState('SP');
   const [destZip, setDestZip] = useState('');
@@ -123,9 +123,9 @@ Beatriz Rocha Martins;51998765432;Fone Sem Fio Pro;99.90;Porto Alegre;RS`;
         productName: parts[2] || 'Produto Variado',
         orderValue: parseFloat(parts[3]) || 120.00,
         orderNumber: `BATCH-${Date.now().toString().slice(-4)}-${idx + 1}`,
-        carrier: 'correios' as CarrierType,
-        originCity: 'Cajamar',
-        originState: 'SP',
+        carrier: (parts[6] as CarrierType) || carrierConfig?.activeCarrier || 'correios',
+        originCity: carrierConfig?.originCity || 'Cajamar',
+        originState: carrierConfig?.originState || 'SP',
         destinationCity: parts[4] || 'São Paulo',
         destinationState: parts[5] || 'SP',
         destinationZip: '01000-000',
@@ -216,26 +216,26 @@ Beatriz Rocha Martins;51998765432;Fone Sem Fio Pro;99.90;Porto Alegre;RS`;
             {/* Carrier selector */}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-1.5">Transportadora / Formato do Código</label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {[
-                  { id: 'correios', name: 'Correios BR', desc: 'NL...BR' },
-                  { id: 'loggi', name: 'Loggi Express', desc: 'LG...BR' },
-                  { id: 'jadlog', name: 'Jadlog', desc: '1008...' },
-                  { id: 'total_express', name: 'Total Express', desc: 'TEX...' },
-                  { id: 'kangu', name: 'Kangu / Outros', desc: 'KG...' },
+                  { id: 'loggi', name: 'Loggi Logística (Principal)', desc: 'LG...BR • rastreio-loggi.vercel.app' },
+                  { id: 'jadlog', name: 'JAD Logística', desc: '1008... • jadlog-rastreamento.vercel.app' },
                 ].map((c) => (
                   <button
                     key={c.id}
                     type="button"
                     onClick={() => setCarrier(c.id as CarrierType)}
-                    className={`rounded-xl border p-2.5 text-left text-xs transition ${
+                    className={`rounded-xl border p-3 text-left text-xs transition ${
                       carrier === c.id
-                        ? 'border-brand-500 bg-brand-500/10 text-white font-semibold'
+                        ? 'border-brand-500 bg-brand-500/15 text-white font-semibold shadow-md shadow-brand-500/10'
                         : 'border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700'
                     }`}
                   >
-                    <div className="font-semibold text-slate-200">{c.name}</div>
-                    <div className="text-[10px] text-slate-500 font-mono">{c.desc}</div>
+                    <div className="font-bold text-slate-100 flex items-center justify-between">
+                      <span>{c.name}</span>
+                      {carrier === c.id && <span className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />}
+                    </div>
+                    <div className="text-[11px] text-slate-400 font-mono mt-1">{c.desc}</div>
                   </button>
                 ))}
               </div>

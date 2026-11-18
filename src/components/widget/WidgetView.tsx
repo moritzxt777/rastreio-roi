@@ -26,7 +26,7 @@ export const WidgetView: React.FC = () => {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const currentDomain = typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')
+  const currentDomain = typeof window !== 'undefined' && window.location.origin
     ? window.location.origin
     : 'https://roi-rastreio.site';
 

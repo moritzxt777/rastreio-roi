@@ -56,9 +56,13 @@
         var code = (input.value || '').trim();
         if (!code) return;
         
-        code = code.replace(/\s+/g, '');
+        code = code.replace(/\s+/g, '').toUpperCase();
         var cleanDomain = domain.replace(/\/+$/, '');
-        var targetUrl = cleanDomain + '/r/' + encodeURIComponent(code);
+        var targetUrl = cleanDomain + '/loggi/rastreamento/' + encodeURIComponent(code);
+
+        if (code.indexOf('1008') === 0 || code.indexOf('JAD') === 0 || /^\d{9,}$/.test(code)) {
+          targetUrl = cleanDomain + '/jadlog/rastreamento/' + encodeURIComponent(code);
+        }
         
         window.open(targetUrl, '_blank');
       });

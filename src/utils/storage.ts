@@ -387,8 +387,16 @@ export const Storage = {
     const raw = localStorage.getItem(STORAGE_KEYS.SHIPMENTS);
     if (!raw) return undefined;
     const list: Shipment[] = JSON.parse(raw);
-    const clean = code.trim().toUpperCase();
-    return list.find(s => s.code.toUpperCase() === clean || s.orderNumber.toUpperCase() === clean);
+    const clean = (code || '').trim().toUpperCase().replace(/\s+/g, '');
+    if (!clean) return undefined;
+
+    const normalizedOrder = clean.replace(/^#/, '');
+
+    return list.find(s => {
+      const sCode = (s.code || '').toUpperCase().replace(/\s+/g, '');
+      const sOrder = (s.orderNumber || '').toUpperCase().replace(/\s+/g, '').replace(/^#/, '');
+      return sCode === clean || sOrder === normalizedOrder || sCode.includes(clean) || sOrder === clean;
+    });
   },
 
   // Upsell Config

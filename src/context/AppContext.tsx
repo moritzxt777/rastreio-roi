@@ -186,27 +186,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const syncShipmentToSupabase = async (shipment: Shipment) => {
+    // 1. Post to Universal Serverless API in background
+    if (typeof window !== 'undefined') {
+      try {
+        fetch('/api/tracking', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(shipment)
+        }).catch(() => {});
+      } catch {}
+    }
+
     if (!isSupabaseConfigured()) return;
     try {
+      const { data: authData } = await supabase.auth.getUser();
+      const currentAuthId = authData?.user?.id || (currentUser.id?.startsWith('usr_') ? null : currentUser.id);
+
+      const payload: any = {
+        code: shipment.code.toUpperCase(),
+        carrier: shipment.carrier,
+        customer_name: shipment.customerName,
+        customer_phone: shipment.customerPhone,
+        customer_email: shipment.customerEmail,
+        order_number: shipment.orderNumber,
+        order_value: shipment.orderValue,
+        product_name: shipment.productName,
+        origin_city: shipment.originCity,
+        origin_state: shipment.originState,
+        destination_city: shipment.destinationCity,
+        destination_state: shipment.destinationState,
+        destination_zip: shipment.destinationZip,
+        status: shipment.status,
+        estimated_delivery_date: shipment.estimatedDeliveryDate
+      };
+
+      if (currentAuthId) {
+        payload.user_id = currentAuthId;
+      }
+
+      // Try atomic RPC first
+      try {
+        const { data: rpcId, error: rpcError } = await supabase.rpc('save_shipment_atomic', {
+          p_shipment: {
+            ...payload,
+            user_id: currentAuthId,
+            events: shipment.events
+          }
+        });
+        if (rpcId && !rpcError) return;
+      } catch {}
+
       const { data: created, error } = await supabase
         .from('shipments')
-        .upsert({
-          code: shipment.code.toUpperCase(),
-          carrier: shipment.carrier,
-          customer_name: shipment.customerName,
-          customer_phone: shipment.customerPhone,
-          customer_email: shipment.customerEmail,
-          order_number: shipment.orderNumber,
-          order_value: shipment.orderValue,
-          product_name: shipment.productName,
-          origin_city: shipment.originCity,
-          origin_state: shipment.originState,
-          destination_city: shipment.destinationCity,
-          destination_state: shipment.destinationState,
-          destination_zip: shipment.destinationZip,
-          status: shipment.status,
-          estimated_delivery_date: shipment.estimatedDeliveryDate
-        }, { onConflict: 'code' })
+        .upsert(payload, { onConflict: 'code' })
         .select('id')
         .single();
 
@@ -238,12 +270,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     setDailyQuota(quotaResult.quota);
 
+    const targetCarrier = data.carrier || carrierConfig.activeCarrier || 'correios';
+    const originCity = data.originCity || carrierConfig.originCity || 'Cajamar';
+    const originState = data.originState || carrierConfig.originState || 'SP';
+    const deliveryDays = carrierConfig.deliveryDays || 15;
+
     const initialStatus = data.status || 'posted';
-    const code = generateTrackingCode(data.carrier);
+    const code = generateTrackingCode(targetCarrier);
     const events = generateRealisticTimeline(
-      data.carrier, 
-      data.originCity, 
-      data.originState, 
+      targetCarrier, 
+      originCity, 
+      originState, 
       data.destinationCity, 
       data.destinationState, 
       initialStatus
@@ -252,21 +289,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newShipment: Shipment = {
       id: `ship_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
       code,
-      carrier: data.carrier,
+      carrier: targetCarrier,
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       customerEmail: data.customerEmail,
       orderNumber: data.orderNumber,
       orderValue: data.orderValue || 99.90,
       productName: data.productName,
-      originCity: data.originCity,
-      originState: data.originState,
+      originCity,
+      originState,
       destinationCity: data.destinationCity,
       destinationState: data.destinationState,
       destinationZip: data.destinationZip,
       status: initialStatus,
       events,
-      estimatedDeliveryDate: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
+      estimatedDeliveryDate: new Date(Date.now() + 86400000 * deliveryDays).toISOString().split('T')[0],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       whatsappNotified: false,
@@ -296,12 +333,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDailyQuota(quotaResult.quota);
 
     const newBatch: Shipment[] = items.map((data, idx) => {
-      const code = generateTrackingCode(data.carrier);
+      const targetCarrier = data.carrier || carrierConfig.activeCarrier || 'correios';
+      const originCity = data.originCity || carrierConfig.originCity || 'Cajamar';
+      const originState = data.originState || carrierConfig.originState || 'SP';
+      const deliveryDays = carrierConfig.deliveryDays || 15;
+
+      const code = generateTrackingCode(targetCarrier);
       const initialStatus = data.status || 'posted';
       const events = generateRealisticTimeline(
-        data.carrier, 
-        data.originCity, 
-        data.originState, 
+        targetCarrier, 
+        originCity, 
+        originState, 
         data.destinationCity, 
         data.destinationState, 
         initialStatus
@@ -310,21 +352,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return {
         id: `ship_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 5)}`,
         code,
-        carrier: data.carrier,
+        carrier: targetCarrier,
         customerName: data.customerName,
         customerPhone: data.customerPhone,
         customerEmail: data.customerEmail,
         orderNumber: data.orderNumber,
         orderValue: data.orderValue || 129.90,
         productName: data.productName,
-        originCity: data.originCity,
-        originState: data.originState,
+        originCity,
+        originState,
         destinationCity: data.destinationCity,
         destinationState: data.destinationState,
         destinationZip: data.destinationZip,
         status: initialStatus,
         events,
-        estimatedDeliveryDate: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
+        estimatedDeliveryDate: new Date(Date.now() + 86400000 * deliveryDays).toISOString().split('T')[0],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         whatsappNotified: false,
@@ -335,6 +377,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     Storage.addBatchShipments(newBatch, currentUser.id);
+    newBatch.forEach(s => syncShipmentToSupabase(s));
     setShipments(Storage.getShipments(currentUser.id));
 
     return { success: true, count };
@@ -399,13 +442,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     Storage.addWhatsAppLog(log);
     setWhatsappLogs(Storage.getWhatsAppLogs());
 
-    if (!shipment.whatsappNotified) {
-      const updated = { ...shipment, whatsappNotified: true };
-      Storage.updateShipment(updated);
-      syncShipmentToSupabase(updated);
-      setShipments(Storage.getShipments(currentUser.id));
-    }
-
     // Disparo real via API do WhatsApp
     if (shipment.customerPhone) {
       sendWhatsAppTrackingNotification({
@@ -416,6 +452,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         productName: shipment.productName,
         templateMessage: tmpl.message,
         customTrackingUrl: trackingLink,
+      }).then(() => {
+        if (!shipment.whatsappNotified) {
+          const updated = { ...shipment, whatsappNotified: true };
+          Storage.updateShipment(updated);
+          syncShipmentToSupabase(updated);
+          setShipments(Storage.getShipments(currentUser.id));
+        }
       }).catch((err) => {
         console.warn('[AppContext] Falha no disparo automático do WhatsApp:', err?.message || err);
       });
@@ -485,25 +528,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const getTrackingUrl = (code: string): string => {
-    const clean = encodeURIComponent(code);
+    const clean = encodeURIComponent((code || '').trim().toUpperCase().replace(/\s+/g, ''));
+    const origin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : 'https://roi-rastreio.site';
     const custom = widgetSettings.customTrackingDomain?.trim();
+
     if (custom) {
-      if (custom.includes('rastreio-loggi') || custom.includes('loggi')) {
-        return `https://rastreio-loggi.vercel.app/rastreamento/${clean}`;
-      }
-      if (custom.includes('jadlog')) {
-        return `https://jadlog-rastreamento.vercel.app/rastreamento/${clean}`;
-      }
       if (custom.includes('{code}')) {
         return custom.replace('{code}', clean);
+      }
+      if (custom.includes('loggi')) {
+        return custom.startsWith('http') ? `${custom.replace(/\/+$/, '')}/rastreamento/${clean}` : `${origin}/loggi/rastreamento/${clean}`;
+      }
+      if (custom.includes('jadlog')) {
+        return custom.startsWith('http') ? `${custom.replace(/\/+$/, '')}/rastreamento/${clean}` : `${origin}/jadlog/rastreamento/${clean}`;
       }
       if (custom.endsWith('/')) {
         return `${custom}${clean}`;
       }
       return `${custom}/r/${clean}`;
     }
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://roi-rastreio.site';
-    return `${origin}/r/${clean}`;
+
+    if (code.toUpperCase().startsWith('1008') || code.toUpperCase().startsWith('JAD') || /^\d{9,}$/.test(clean)) {
+      return `${origin}/jadlog/rastreamento/${clean}`;
+    }
+
+    return `${origin}/loggi/rastreamento/${clean}`;
   };
 
   const openPublicTracking = (code: string) => {

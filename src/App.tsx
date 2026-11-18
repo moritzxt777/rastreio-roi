@@ -93,6 +93,7 @@ export const App: React.FC = () => {
       {/* 2.1 Cloned Carrier Tracking Portals (Jadlog & Loggi) */}
       <Route path="/jadlog" element={<JadlogPortalView />} />
       <Route path="/jadlog/home" element={<JadlogPortalView />} />
+      <Route path="/jadlog/rastreamento" element={<JadlogPortalView />} />
       <Route path="/jadlog/rastreamento/:code" element={<JadlogPortalView />} />
       <Route path="/jadlog/:code" element={<JadlogPortalView />} />
 
@@ -102,10 +103,15 @@ export const App: React.FC = () => {
       <Route path="/loggi/rastreamento/:code" element={<LoggiPortalView />} />
       <Route path="/loggi/:code" element={<LoggiPortalView />} />
 
-      {/* 2. Public Tracking Routes (Secure RPC lookup with 404) */}
+      {/* 2. Public Tracking Routes */}
       <Route path="/r/:code" element={<PublicTrackingView />} />
+      <Route path="/r" element={<PublicTrackingView />} />
       <Route path="/rastreio/:code" element={<PublicTrackingView />} />
+      <Route path="/rastreio" element={<PublicTrackingView />} />
+      <Route path="/rastreamento/:code" element={<PublicTrackingView />} />
+      <Route path="/rastreamento" element={<PublicTrackingView />} />
       <Route path="/tracking/:code" element={<PublicTrackingView />} />
+      <Route path="/tracking" element={<PublicTrackingView />} />
 
       {/* 3. Dedicated Admin Routes (Protected by RequireAdmin) */}
       <Route path="/admin-login" element={<AdminLoginPage />} />
